@@ -1,0 +1,29 @@
+{
+  "name": "API Set Conf Generator",
+  "version": "1.0.0",
+  "description": "API Set Conf Generator Automation",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index"
+  },
+  "keywords": [
+    "middleware",
+    "livescore"
+  ],
+  "author": "DoniHMRs",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-rate-limit": "^5.3.0",
+    "helmet": "^4.6.0",
+    "jsonwebtoken": "^8.5.1",
+    "md5": "^2.3.0",
+    "morgan": "^1.10.0",
+    "node-match-path": "^0.6.3",
+    "redis": "^3.1.2",
+    "redis-connection-pool": "^1.7.4"
+  }
+}
