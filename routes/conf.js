@@ -9,9 +9,16 @@ const lib = require(appDir+'/controller/lib')
 
 router.post('/set',token.verifyJwt, function(req, res, next) {
     try {
-        const pathFile = req.body.path
+        const getPathFile = req.body.path
         const nameFile = req.body.name
         const getTextFile = req.body.text
+
+        const checkPath = getPathFile.substr(getPathFile.length - 1)
+
+        let pathFile = getPathFile
+        if (checkPath !== "/") {
+            pathFile = getPathFile+"/"
+        }
 
         if (pathFile !== "" && nameFile !== "" && getTextFile !== "") {
             try {
@@ -57,8 +64,15 @@ router.post('/set',token.verifyJwt, function(req, res, next) {
 
 router.post('/restore',token.verifyJwt, function(req, res, next) {
     try {
-        const pathFile = req.body.path
+        const getPathFile = req.body.path
         const nameFile = req.body.name
+
+        const checkPath = getPathFile.substr(getPathFile.length - 1)
+
+        let pathFile = getPathFile
+        if (checkPath !== "/") {
+            pathFile = getPathFile+"/"
+        }
 
         if (pathFile !== "" && nameFile !== "") {
             try {
