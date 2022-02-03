@@ -1,4 +1,7 @@
 const lib = {}
+const fs = require('fs');
+const util = require('util');
+const writeFileAsync = util.promisify(fs.writeFile);
 
 lib.range = (start,stop) => {
     const result=[];
@@ -27,5 +30,45 @@ lib.encrypDoni = (id) => {
   enc = Buffer.from("d0N1"+enc).toString('base64');
   return enc
 }
-  
+
+lib.writeFile = async (path,file,text) => {
+  try {
+    if (text == "") {
+      return false
+    }
+
+    if (fs.existsSync(path+file)) {
+      await fs.createReadStream(path+file).pipe(fs.createWriteStream(path+file+".backup"))
+      await fs.unlinkSync(path+file);
+    }
+
+    await writeFileAsync(path+file, text); 
+    return true;
+  } catch(err) {
+    return false;
+  }
+}
+
+lib.restoreFile = async (path,file) => {
+  try {
+    if (path == "") {
+      return false
+    }
+
+    if (fs.existsSync(path+file+".backup")) {
+      if (fs.existsSync(path+file)) {
+        await fs.unlinkSync(path+file);
+      }
+      await fs.createReadStream(path+file+".backup").pipe(fs.createWriteStream(path+file))
+      await fs.unlinkSync(path+file+".backup");
+
+      return true;
+    } else {
+      return false;
+    }
+  } catch(err) {
+    return false;
+  }
+}
+
 module.exports = lib;

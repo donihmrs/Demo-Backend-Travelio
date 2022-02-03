@@ -5,62 +5,99 @@ const path = require('path');
 const appDir = path.dirname(require.main.filename);
 
 const token = require(appDir+'/controller/token')
+const lib = require(appDir+'/controller/lib')
 
-const client = require('redis-connection-pool')("redispool", {
-    host: process.env.REDIS_HOST, 
-    port: process.env.REDIS_PORT, 
-    max_clients: 100, 
-    database: 0,
-});
-
-router.post('/banner',token.verifyJwt, function(req, res, next) {
+router.post('/set',token.verifyJwt, function(req, res, next) {
     try {
-        client.get("bannerWeb_"+req.body.domain+"_"+req.body.language, function(err, reply) {
-            if (reply !== null) {
-                res.status(200).send(JSON.parse(reply));
-            } else {
-                token.tokenApiBe().then((tokenBe) => {
-                    //0 = Top
-                    //1 = Left
-                    //2 = Right
-                    //3 = Center
-                    let data = {
-                        "Post_Ads":req.body.id,
-                        "Identitas":"Dari Mid Livescore",
-                        "Message":"Get Ads Banner",
-                        "domain":req.body.domain,
-                        'lang':req.body.language
-                    }
-                    axios.post(process.env.API_BE+"/Api_Ads/getAds", data, {
-                        headers: {
-                            'Token_Jwt':tokenBe,
-                        }
-                    }
-                    ).then(function(resAds) {
-                        try {
-                            if (resAds.data.status === 200) {
-                                client.set("bannerWeb_"+req.body.domain+"_"+req.body.language, JSON.stringify(resAds.data), function(){
-                                    client.expire("bannerWeb_"+req.body.domain+"_"+req.body.language,60)
-                                });
+        const pathFile = req.body.path
+        const nameFile = req.body.name
+        const getTextFile = req.body.text
 
-                                res.status(200).send(resAds.data);
-                            } else {
-                                res.status(400).send(resAds.data);
-                            }
-                        } catch (err) {
-                            res.status(500).send(err);
-                        }
-                    }).catch(function (error) {
-                        console.log(error);
-                        res.status(400).send(null);
-                    });
+        if (pathFile !== "" && nameFile !== "" && getTextFile !== "") {
+            try {
+                const textFile = Buffer.from(getTextFile, 'base64').toString('utf-8');
+                const writeFile = lib.writeFile(pathFile,nameFile,textFile)
+                if (writeFile) {
+                    res.status(200).send({
+                        status:200,
+                        data:{},
+                        message:"Success, Save Config is finished for "+nameFile+ " & Path : "+pathFile
+                    })
+                } else {
+                    res.status(400).send({
+                        status:400,
+                        data:{},
+                        message:"Failed, Write file !!!. Please checked"
+                    })
+                }
+            } catch (errFile) {
+                console.log(errFile)
+                res.status(500).send({
+                    status:500,
+                    data:{},
+                    message:"Error, Please checked code Write File or File on server"
                 })
             }
-        })
-        
+        } else {
+            res.status(400).send({
+                status:400,
+                data:{},
+                message:"Failed, Path file , Name file and Text file must be filled"
+            })
+        }
     } catch(err) {
         console.log(err)
-        res.status(400).send(null);
+        res.status(500).send({
+            status:500,
+            data:{},
+            message:"Error, Please check code or server"
+        })
+    }
+});
+
+router.post('/restore',token.verifyJwt, function(req, res, next) {
+    try {
+        const pathFile = req.body.path
+        const nameFile = req.body.name
+
+        if (pathFile !== "" && nameFile !== "") {
+            try {
+                const restoreFile = lib.restoreFile(pathFile,nameFile)
+                if (restoreFile) {
+                    res.status(200).send({
+                        status:200,
+                        data:{},
+                        message:"Success, Restore Config is finished for "+nameFile+ " & Path : "+pathFile
+                    })
+                } else {
+                    res.status(400).send({
+                        status:400,
+                        data:{},
+                        message:"Failed, Restore file !!!. Please checked"
+                    })
+                }
+            } catch (errFile) {
+                console.log(errFile)
+                res.status(500).send({
+                    status:500,
+                    data:{},
+                    message:"Error, Please checked code Restore File or File on server"
+                })
+            }
+        } else {
+            res.status(400).send({
+                status:400,
+                data:{},
+                message:"Failed, Path file and Name file must be filled"
+            })
+        }
+    } catch(err) {
+        console.log(err)
+        res.status(500).send({
+            status:500,
+            data:{},
+            message:"Error, Please check code or server"
+        })
     }
 });
 
