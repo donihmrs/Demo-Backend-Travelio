@@ -1,7 +1,7 @@
 {
-  "name": "APISetConfGenerator",
+  "name": "APIBackendHRM",
   "version": "1.0.0",
-  "description": "API Set Conf Generator Automation",
+  "description": "API Backend HRM",
   "main": "index.js",
   "scripts": {
     "test": "node index"
