@@ -83,10 +83,12 @@ app.disable('x-powered-by')
 const indexRouter = require(appDir+'/routes/index');
 const confRouter = require(appDir+'/routes/conf');
 const tokenRouter = require(appDir+'/routes/token');
+const karyawanRouter = require(appDir+'/routes/karyawan');
 
 app.use('/', indexRouter);
 app.use('/conf', confRouter);
 app.use('/token', tokenRouter);
+app.use('/karyawan', karyawanRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
