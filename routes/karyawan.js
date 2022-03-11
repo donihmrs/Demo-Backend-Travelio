@@ -9,7 +9,8 @@ const mysqlConf = require(appDir+'/controller/mysqlConf')
 router.post('/addKandidat', async function(req, res, next) {
     try {
         const conn = await mysqlConf.conn(req.body.database);
-        console.log(req.body)
+        let lastIdEmployee = 0
+        let namaKaryawanForm = ""
 
         if (req.body.biodata.nama == "") {
             res.status(400).send({
@@ -19,6 +20,8 @@ router.post('/addKandidat', async function(req, res, next) {
             })
         } else {
             const nama = req.body.biodata.nama
+            namaKaryawanForm = nama
+
             const tempatLahir = req.body.biodata.tempatLahir
 
             //tanggalLahir ada object {year, month, day}
@@ -39,6 +42,22 @@ router.post('/addKandidat', async function(req, res, next) {
             const jenisSim = req.body.biodata.jenisSim
             const kendaraan = req.body.biodata.kendaraan
             const jenisKendaraan = req.body.biodata.jenisKendaraan
+
+            await conn.promise().execute("INSERT INTO hs_hr_employee (emp_firstname) VALUES (?) ",[nama])
+            .then(([result, fields]) => {
+                lastIdEmployee = result.insertId
+                
+                console.log("Berhasil tambah data karyawan / kandidat "+nama)
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+
+                res.status(400).send({
+                    status:400,
+                    data:{},
+                    message:String(err.sqlMessage)
+                })
+            })
         }
 
         if (req.body.bahasa.length > 0) {
@@ -206,7 +225,7 @@ router.post('/addKandidat', async function(req, res, next) {
         }
 
         if (req.body.kerja !== undefined) {
-            
+
             //pada tanggal masuk ada object {year, month, day}
             const tanggal = req.body.kerja.tanggalMasuk
 
@@ -251,25 +270,33 @@ router.post('/addKandidat', async function(req, res, next) {
             });
         }
 
-        conn.promise().execute("SELECT emp_lastname FROM hs_hr_employee")
-            .then(([rows, fields]) => {
+        // conn.promise().execute("SELECT emp_lastname FROM hs_hr_employee")
+        //     .then(([rows, fields]) => {
+        //         console.log(rows)
+        //         res.status(200).send({
+        //             status:200,
+        //             data:rows,
+        //             message:"Success Get Table hs_hr_employee"
+        //         })
+        //     })
+        //     .catch((err) => {
+        //         console.log("Failed Execute Query "+String(err.sqlMessage))
 
-                res.status(200).send({
-                    status:200,
-                    data:rows,
-                    message:"Success Get Table hs_hr_employee"
-                })
-            })
-            .catch((err) => {
-                console.log("Failed Execute Query "+String(err.sqlMessage))
+        //         res.status(400).send({
+        //             status:400,
+        //             data:{},
+        //             message:String(err.sqlMessage)
+        //         })
+        //     })
+        //     .finally(() => conn.end())
 
-                res.status(400).send({
-                    status:400,
-                    data:{},
-                    message:String(err.sqlMessage)
-                })
-            })
-            .finally(() => conn.end())
+        console.log(lastIdEmployee)
+        res.status(200).send({
+            status:200,
+            data:{},
+            message:"Selamat "+namaKaryawanForm+", Anda berhasil input data ke sistem. Terima kasih"
+        })
+        conn.end()
     } catch(err) {
         console.log(err)
         res.status(500).send({
