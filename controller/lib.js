@@ -71,4 +71,22 @@ lib.restoreFile = async (path,file) => {
   }
 }
 
+lib.responseSuccess = async (data,message) => {
+  let objRes = {}
+  objRes['status'] = 200
+  objRes['data'] = data
+  objRes['message'] = message
+
+  return objRes
+}
+
+lib.responseError = async (status,message) => {
+  let objRes = {}
+  objRes['status'] = status
+  objRes['data'] = {}
+  objRes['message'] = message
+
+  return objRes
+}
+
 module.exports = lib;
