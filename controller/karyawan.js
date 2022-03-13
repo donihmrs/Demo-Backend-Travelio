@@ -4,6 +4,7 @@ const token = require(appDir+'/controller/token')
 const lib = require(appDir+'/controller/lib')
 
 const employeeModel = require(appDir+'/model/employeeModel')
+const bahasaModel = require(appDir+'/model/bahasaModel')
 
 const karyawan = {}
 
@@ -24,7 +25,6 @@ karyawan.addKandidat = async (req, res, next) => {
             namaKaryawanForm = nama
 
             const tempatLahir = req.body.biodata.tempatLahir
-
             //tanggalLahir ada object {year, month, day}
             const tanggalLahir = req.body.biodata.tanggalLahir
 
@@ -60,9 +60,9 @@ karyawan.addKandidat = async (req, res, next) => {
 
             data['namaDepan'] = namaArray[0]
             data['tempatLahir'] = tempatLahir
-            data['tanggalLahir'] = tanggalLahir.year +'-'+ tanggalLahir.month +'-'+ tanggalLahir.day
+            data['tanggalLahir'] = tanggalLahir.year +'-'+ lib.dateMonth(tanggalLahir.month) +'-'+ lib.dateDay(tanggalLahir.day)
             data['agama'] = agama
-            data['kelamin'] = kelamin
+            data['kelamin'] = parseInt(kelamin)
             data['umur'] = umur
             data['alamatKtp'] = alamatKtp
             data['alamatDomisili'] = alamatDomisili
@@ -87,20 +87,89 @@ karyawan.addKandidat = async (req, res, next) => {
             data['emp_id'] = id_emp;
 
             lastIdEmployee = await employeeModel.insertLastId(data)
+
+            if (lastIdEmployee.status != 200) {
+                res.status(400).send({
+                    status:400,
+                    data:{},
+                    message:"Fail, Anda gagal menginput data"
+                })
+            }
+
+            lastIdEmployee = lastIdEmployee.data
+        }
+
+        if (req.body.kerja !== undefined) {
+
+            let data = {}
+
+            data['database'] = nameDatabase
+
+            //pada tanggal masuk ada object {year, month, day}
+            const tanggal = req.body.kerja.tanggalMasuk
+
+            const posisi = req.body.kerja.posisiTerakhir
+            const gajiTerakhir = req.body.kerja.gajiTerakhir
+            const gajiDiharapkan = req.body.kerja.gajiDiharapkan
+
+            data['id_emp'] = lastIdEmployee
+            data['tgl_masuk'] = tanggal.year +'-'+ lib.dateMonth(tanggal.month) +'-'+ lib.dateDay(tanggal.day)
+            data['jabatan'] = posisi
+            data['gajiTerakhir'] = gajiTerakhir
+            data['gajiDiharapkan'] = gajiDiharapkan
+
+            await employeeModel.insertLamaran(data)
         }
 
         if (req.body.bahasa.length > 0) {
-            req.body.bahasa.forEach(ele => {
+            req.body.bahasa.forEach(async ele => {
                 const namaBahasa = ele.nama
                 const berBahasa = ele.berbicara
                 const menuBahasa = ele.menulis
                 const mendBahasa = ele.mendengarkan
+                const bacaBahasa = ele.membaca
 
                 let data = {}
-                data['id_emp'] = lastIdEmployee;
+                data['database'] = nameDatabase;
                 data['nama'] = namaBahasa;
-                data['id_emp'] = lastIdEmployee;
-                data['id_emp'] = lastIdEmployee;
+                data['id_emp'] = lastIdEmployee
+
+                await bahasaModel.getIdBahasa(data).then(async (idBahasa) => {
+                    if (idBahasa.data == 0) {
+                        idBahasa = await bahasaModel.insertLastId(data)
+                    } 
+
+                    data['id_bahasa'] = idBahasa.data;
+
+                    //Menulis = 1
+                    //Berbicara = 2
+                    //Membaca = 3
+                    //Mendengarkan = 4
+
+                    if (menuBahasa !== undefined) {
+                        data['type'] = 1
+                        data['kompeten'] = lib.convertBahasaToId(menuBahasa);
+                        await employeeModel.insertBahasa(data)
+                    }
+
+                    if (berBahasa !== undefined) {
+                        data['type'] = 2
+                        data['kompeten'] = lib.convertBahasaToId(berBahasa);
+                        await employeeModel.insertBahasa(data)
+                    }
+
+                    if (mendBahasa !== undefined) {
+                        data['type'] = 3
+                        data['kompeten'] = lib.convertBahasaToId(bacaBahasa);
+                        await employeeModel.insertBahasa(data)
+                    }
+
+                    if (mendBahasa !== undefined) {
+                        data['type'] = 4
+                        data['kompeten'] = lib.convertBahasaToId(mendBahasa);
+                        await employeeModel.insertBahasa(data)
+                    }
+                })
             });
         }
 
@@ -257,16 +326,6 @@ karyawan.addKandidat = async (req, res, next) => {
                 const kota = ele.kota
                 const sertifikat = ele.sertifikat
             });
-        }
-
-        if (req.body.kerja !== undefined) {
-
-            //pada tanggal masuk ada object {year, month, day}
-            const tanggal = req.body.kerja.tanggalMasuk
-
-            const posisi = req.body.kerja.posisiTerakhir
-            const gajiTerakhir = req.body.kerja.gajiTerakhir
-            const gajiDiharapkan = req.body.kerja.gajiDiharapkan
         }
 
         if (req.body.prestasi.length > 0) {

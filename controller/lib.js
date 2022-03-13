@@ -71,7 +71,7 @@ lib.restoreFile = async (path,file) => {
   }
 }
 
-lib.responseSuccess = async (data,message) => {
+lib.responseSuccess = async (data={},message) => {
   let objRes = {}
   objRes['status'] = 200
   objRes['data'] = data
@@ -87,6 +87,42 @@ lib.responseError = async (status,message) => {
   objRes['message'] = message
 
   return objRes
+}
+
+lib.dateMonth = (month) => {
+  if (month.length == 1) {
+    return "0"+month
+  } else {
+    return month
+  }
+}
+
+lib.dateDay = (day) => {
+  if (day.length == 1) {
+    return "0"+day
+  } else {
+    return day
+  }
+}
+
+lib.convertBahasaToId = (name) => {
+  switch (name) {
+    case "Baik Sekali":
+      return 4;
+      break;
+    case "Baik":
+      return 3;
+      break;
+    case "Cukup":
+      return 2;
+      break;
+    case "Kurang":
+      return 1;
+      break;
+    default:
+      return 2
+      break;
+  }
 }
 
 module.exports = lib;
