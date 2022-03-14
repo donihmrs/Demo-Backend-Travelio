@@ -75,4 +75,20 @@ employeeModel.insertBahasa = async (data) => {
             .finally(() => conn.end())
 }
 
+employeeModel.insertSkill = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    const values = [data.id_emp,data.id_skill,1];
+ 
+    return await conn.promise().execute("INSERT INTO hs_hr_emp_skill (emp_number,skill_id,years_of_exp) VALUES (?,?,?) ",values)
+            .then(([result, fields]) => {
+                console.log("Berhasil insert skill ke karyawan id number "+data.id_emp)
+                return lib.responseSuccess(result, "Berhasil insert data ke table hs_hr_emp_skill")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 module.exports = employeeModel;

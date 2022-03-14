@@ -5,6 +5,7 @@ const lib = require(appDir+'/controller/lib')
 
 const employeeModel = require(appDir+'/model/employeeModel')
 const bahasaModel = require(appDir+'/model/bahasaModel')
+const skillModel = require(appDir+'/model/skillModel')
 
 const karyawan = {}
 
@@ -176,6 +177,21 @@ karyawan.addKandidat = async (req, res, next) => {
         if (req.body.keahlian.length > 0) {
             req.body.keahlian.forEach(ele => {
                 const keahlian = ele
+
+                let data = {}
+                data['database'] = nameDatabase;
+                data['nama'] = keahlian;
+                data['id_emp'] = lastIdEmployee
+
+                await skillModel.getIdName(data).then(async (idSkill) => {
+                    if (idSkill.data == 0) {
+                        idSkill = await skillModel.insertLastId(data)
+                    } 
+
+                    data['id_skill'] = idSkill.data;
+
+                    await employeeModel.insertSkill(data)
+                })
             });
         }
 
