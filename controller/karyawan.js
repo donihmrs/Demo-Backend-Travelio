@@ -78,6 +78,7 @@ karyawan.addKandidat = async (req, res, next) => {
             data['jenisSim'] = jenisSim
             data['kendaraan'] = kendaraan
             data['jenisKendaraan'] = jenisKendaraan
+            data['statusKaryawan'] = 2
 
             let id_emp = "00001";
             const getEmpLastId = await employeeModel.lastEmployeeId(nameDatabase)
@@ -132,7 +133,7 @@ karyawan.addKandidat = async (req, res, next) => {
 
                 let data = {}
                 data['database'] = nameDatabase;
-                data['nama'] = namaBahasa;
+                data['nama'] = lib.capitalFirstText(namaBahasa);
                 data['id_emp'] = lastIdEmployee
 
                 await bahasaModel.getIdBahasa(data).then(async (idBahasa) => {
@@ -175,7 +176,7 @@ karyawan.addKandidat = async (req, res, next) => {
         }
 
         if (req.body.keahlian.length > 0) {
-            req.body.keahlian.forEach(ele => {
+            req.body.keahlian.forEach(async ele => {
                 const keahlian = ele
 
                 let data = {}
@@ -195,8 +196,15 @@ karyawan.addKandidat = async (req, res, next) => {
             });
         }
 
+        let dataKeluarga = {}
+
+        dataKeluarga['database'] = nameDatabase;
+        dataKeluarga['form'] = []
+
         if (req.body.keluarga.anak.length > 0) {
-            req.body.keluarga.anak.forEach(ele => {
+            let tempKeluarga = []
+
+            req.body.keluarga.anak.forEach(async ele => {
                 const nama = ele.nama
                 const tempat = ele.tempatLahir
 
@@ -206,10 +214,19 @@ karyawan.addKandidat = async (req, res, next) => {
                 const kelamin = ele.kelamin
                 const pendidikan = ele.pendidikan
                 const pekerjaan = ele.pekerjaan
+                
+                const tglLahir = tanggal.year +'-'+ lib.dateMonth(tanggal.month) +'-'+ lib.dateDay(tanggal.day)
+
+                tempKeluarga = [lastIdEmployee,dataKeluarga['form'].length + 1,nama,"other","Anak",tglLahir
+                                    ,tempat,parseInt(kelamin),pendidikan.toUpperCase(),pekerjaan]
+
+                dataKeluarga['form'].push(tempKeluarga)
             });
         }
 
         if (req.body.keluarga.ayah.nama != "") {
+            let tempKeluarga = []
+
             const nama = req.body.keluarga.ayah.nama
             const tempat = req.body.keluarga.ayah.tempatLahir
 
@@ -219,9 +236,18 @@ karyawan.addKandidat = async (req, res, next) => {
             const kelamin = req.body.keluarga.ayah.kelamin
             const pendidikan = req.body.keluarga.ayah.pendidikan
             const pekerjaan = req.body.keluarga.ayah.pekerjaan
+
+            const tglLahir = tanggal.year +'-'+ lib.dateMonth(tanggal.month) +'-'+ lib.dateDay(tanggal.day)
+
+            tempKeluarga = [lastIdEmployee,dataKeluarga['form'].length + 1,nama,"other","Ayah",tglLahir
+                            ,tempat,parseInt(kelamin),pendidikan.toUpperCase(),pekerjaan]
+
+            dataKeluarga['form'].push(tempKeluarga)
         }
 
         if (req.body.keluarga.ibu.nama != "") {
+            let tempKeluarga = []
+
             const nama = req.body.keluarga.ibu.nama
             const tempat = req.body.keluarga.ibu.tempatLahir
 
@@ -231,10 +257,19 @@ karyawan.addKandidat = async (req, res, next) => {
             const kelamin = req.body.keluarga.ibu.kelamin
             const pendidikan = req.body.keluarga.ibu.pendidikan
             const pekerjaan = req.body.keluarga.ibu.pekerjaan
+
+            const tglLahir = tanggal.year +'-'+ lib.dateMonth(tanggal.month) +'-'+ lib.dateDay(tanggal.day)
+
+            tempKeluarga = [lastIdEmployee,dataKeluarga['form'].length + 1,nama,"other","Ibu",tglLahir
+                            ,tempat,parseInt(kelamin),pendidikan.toUpperCase(),pekerjaan]
+
+            dataKeluarga['form'].push(tempKeluarga)
         }
 
         if (req.body.keluarga.saudara.length > 0) {
-            req.body.keluarga.saudara.forEach(ele => {
+            let tempKeluarga = []
+
+            req.body.keluarga.saudara.forEach(async ele => {
                 const nama = ele.nama
                 const tempat = ele.tempatLahir
 
@@ -244,10 +279,20 @@ karyawan.addKandidat = async (req, res, next) => {
                 const kelamin = ele.kelamin
                 const pendidikan = ele.pendidikan
                 const pekerjaan = ele.pekerjaan
+
+                const tglLahir = tanggal.year +'-'+ lib.dateMonth(tanggal.month) +'-'+ lib.dateDay(tanggal.day)
+
+                tempKeluarga = [lastIdEmployee,dataKeluarga['form'].length + 1,nama,"other","Saudara",tglLahir
+                            ,tempat,parseInt(kelamin),pendidikan.toUpperCase(),pekerjaan]
+
+                    
+                dataKeluarga['form'].push(tempKeluarga)
             });
         }
 
         if (req.body.keluarga.sumis.nama != "") {
+            let tempKeluarga = []
+
             const nama = req.body.keluarga.sumis.nama
             const tempat = req.body.keluarga.sumis.tempatLahir
 
@@ -257,10 +302,33 @@ karyawan.addKandidat = async (req, res, next) => {
             const kelamin = req.body.keluarga.sumis.kelamin
             const pendidikan = req.body.keluarga.sumis.pendidikan
             const pekerjaan = req.body.keluarga.sumis.pekerjaan
+
+            let relation = "Istri"
+
+            if (parseInt(kelamin) == 1) {
+                relation = "Suami";
+            }
+
+            const tglLahir = tanggal.year +'-'+ lib.dateMonth(tanggal.month) +'-'+ lib.dateDay(tanggal.day)
+
+            tempKeluarga = [lastIdEmployee,dataKeluarga['form'].length + 1,nama,"other",relation,tglLahir
+                        ,tempat,parseInt(kelamin),pendidikan.toUpperCase(),pekerjaan]
+
+                
+            dataKeluarga['form'].push(tempKeluarga)
         }
 
+        await employeeModel.insertDependents(dataKeluarga)
+
         if (req.body.organisasi.length > 0) {
-            req.body.organisasi.forEach(ele => {
+            let tempOrganisasi = []
+
+            let data = {}
+
+            data['database'] = nameDatabase
+            data['form'] = []
+
+            req.body.organisasi.forEach(async ele => {
                 const nama = ele.nama
                 const jenis = ele.jenis
 
@@ -268,8 +336,21 @@ karyawan.addKandidat = async (req, res, next) => {
                 const periode = ele.periode
                 
                 const jabatan = ele.jabatan
+
+                tempOrganisasi = [lastIdEmployee,nama,jenis,periode.from.year,periode.to.year,jabatan]
+
+                data['form'].push(tempOrganisasi)
             });
+
+            await employeeModel.insertOrganisasi(data)
         }
+
+        //1 = Pasca Sarjana
+        //2 = Sarjana
+        //3 = Akademi
+        //4 = SMA/K
+        //5 = SMP
+        //6 = SD
 
         if (req.body.pendidikan.akademi !== undefined) {
             const nama = req.body.pendidikan.akademi.nama
@@ -279,6 +360,21 @@ karyawan.addKandidat = async (req, res, next) => {
 
             const jurusan = req.body.pendidikan.akademi.jurusan
             const keterangan = req.body.pendidikan.akademi.keterangan
+
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['id_emp'] = lastIdEmployee
+            data['id_edu'] = 3;
+            data['name'] = nama;
+            data['major'] = jurusan;
+            data['year'] = periode.to.year;
+            data['score'] = "0";
+            data['period_from'] = periode.from.year +'-01-01';
+            data['period_to'] = periode.to.year +'-01-01';
+            data['keterangan'] = keterangan;
+
+            await employeeModel.insertEducation(data)
         }
 
         if (req.body.pendidikan.pascaSarjana !== undefined) {
@@ -289,6 +385,21 @@ karyawan.addKandidat = async (req, res, next) => {
 
             const jurusan = req.body.pendidikan.pascaSarjana.jurusan
             const keterangan = req.body.pendidikan.pascaSarjana.keterangan
+
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['id_emp'] = lastIdEmployee
+            data['id_edu'] = 1;
+            data['name'] = nama;
+            data['major'] = jurusan;
+            data['year'] = periode.to.year;
+            data['score'] = "0";
+            data['period_from'] = periode.from.year +'-01-01';
+            data['period_to'] = periode.to.year +'-01-01';
+            data['keterangan'] = keterangan;
+
+            await employeeModel.insertEducation(data)
         }
 
         if (req.body.pendidikan.sarjana !== undefined) {
@@ -299,6 +410,21 @@ karyawan.addKandidat = async (req, res, next) => {
 
             const jurusan = req.body.pendidikan.sarjana.jurusan
             const keterangan = req.body.pendidikan.sarjana.keterangan
+
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['id_emp'] = lastIdEmployee
+            data['id_edu'] = 2;
+            data['name'] = nama;
+            data['major'] = jurusan;
+            data['year'] = periode.to.year;
+            data['score'] = "0";
+            data['period_from'] = periode.from.year +'-01-01';
+            data['period_to'] = periode.to.year +'-01-01';
+            data['keterangan'] = keterangan;
+
+            await employeeModel.insertEducation(data)
         }
 
         if (req.body.pendidikan.smak !== undefined) {
@@ -309,6 +435,21 @@ karyawan.addKandidat = async (req, res, next) => {
 
             const jurusan = req.body.pendidikan.smak.jurusan
             const keterangan = req.body.pendidikan.smak.keterangan
+
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['id_emp'] = lastIdEmployee
+            data['id_edu'] = 4;
+            data['name'] = nama;
+            data['major'] = jurusan;
+            data['year'] = periode.to.year;
+            data['score'] = "0";
+            data['period_from'] = periode.from.year +'-01-01';
+            data['period_to'] = periode.to.year +'-01-01';
+            data['keterangan'] = keterangan;
+
+            await employeeModel.insertEducation(data)
         }
 
         if (req.body.pendidikan.smp !== undefined) {
@@ -319,6 +460,21 @@ karyawan.addKandidat = async (req, res, next) => {
 
             const jurusan = req.body.pendidikan.smp.jurusan
             const keterangan = req.body.pendidikan.smp.keterangan
+
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['id_emp'] = lastIdEmployee
+            data['id_edu'] = 5;
+            data['name'] = nama;
+            data['major'] = jurusan;
+            data['year'] = periode.to.year;
+            data['score'] = "0";
+            data['period_from'] = periode.from.year +'-01-01';
+            data['period_to'] = periode.to.year +'-01-01';
+            data['keterangan'] = keterangan;
+
+            await employeeModel.insertEducation(data)
         }
 
         if (req.body.pendidikan.sd !== undefined) {
@@ -329,10 +485,32 @@ karyawan.addKandidat = async (req, res, next) => {
 
             const jurusan = req.body.pendidikan.sd.jurusan
             const keterangan = req.body.pendidikan.sd.keterangan
+
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['id_emp'] = lastIdEmployee
+            data['id_edu'] = 6;
+            data['name'] = nama;
+            data['major'] = jurusan;
+            data['year'] = periode.to.year;
+            data['score'] = "0";
+            data['period_from'] = periode.from.year +'-01-01';
+            data['period_to'] = periode.to.year +'-01-01';
+            data['keterangan'] = keterangan;
+
+            await employeeModel.insertEducation(data)
         }
 
         if (req.body.nonFormal.length > 0) {
-            req.body.nonFormal.forEach(ele => {
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['form'] = []
+
+            let tempNonFormal = []
+
+            req.body.nonFormal.forEach(async ele => {
                 const jenis = ele.jenis
 
                 // di dalam periode ada object { from: { year: '2021' }, to: { year: '2022' } }
@@ -341,27 +519,63 @@ karyawan.addKandidat = async (req, res, next) => {
                 const penyelenggara = ele.penyelenggara
                 const kota = ele.kota
                 const sertifikat = ele.sertifikat
+
+                tempNonFormal = [lastIdEmployee,jenis,periode.from.year,periode.to.year,penyelenggara,kota,sertifikat]
+
+                data['form'].push(tempNonFormal)
             });
+
+            await employeeModel.insertNonFormal(data)
         }
 
         if (req.body.prestasi.length > 0) {
-            req.body.prestasi.forEach(ele => {
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['form'] = []
+
+            let tempPrestasi = []
+            req.body.prestasi.forEach(async ele => {
                 const jenis = ele.jenis
                 const jabatanText = ele.jabatan
+
+                tempPrestasi = [lastIdEmployee,jenis,jabatanText]
+                data['form'].push(tempPrestasi)
             });
+
+            await employeeModel.insertPrestasi(data)
         }
 
         if (req.body.referensi.length > 0) {
-            req.body.referensi.forEach(ele => {
+            let tempReferensi = []
+
+            let data = {}
+            data['database'] = nameDatabase;
+            data['form'] = []
+
+            req.body.referensi.forEach(async ele => {
                 const nama = ele.nama
                 const hubungan = ele.hubungan
                 const alamat = ele.alamat
-                const telepon = ele.telepon
+                const noMobile = ele.telepon
+
+                tempReferensi = [lastIdEmployee,data['form'].length + 1,nama,hubungan,alamat,noMobile]
+
+                data['form'].push(tempReferensi)
             });
+
+            await employeeModel.insertReferensi(data)
         }
 
         if (req.body.riwayat.length > 0) {
-            req.body.riwayat.forEach(ele => {
+            let tempRiwayat = [];
+
+            let data = {}
+
+            data['database'] = nameDatabase;
+            data['form'] = []
+
+            req.body.riwayat.forEach(async ele => {
                 const namaPerusahaan = ele.namaPerusahaan
                 const jenis = ele.jenis
                 const alamat = ele.alamat
@@ -377,28 +591,18 @@ karyawan.addKandidat = async (req, res, next) => {
 
                 const tugas = ele.tugas
                 const alasan = ele.alasan
+
+                const startDate = tanggalMasuk.year +'-'+ lib.dateMonth(tanggalMasuk.month) +'-'+ lib.dateDay(tanggalMasuk.day)
+                const endDate = tanggalBerhenti.year +'-'+ lib.dateMonth(tanggalBerhenti.month) +'-'+ lib.dateDay(tanggalBerhenti.day)
+                
+                tempRiwayat = [lastIdEmployee,data['form'].length + 1,namaPerusahaan,posisi,startDate,endDate,tugas,jenis,alamat
+                                ,gaji,namaPimpinan,namaAtasan,telepon,alasan]
+
+                data['form'].push(tempRiwayat)
             });
+
+            await employeeModel.insertRiwayatPekerjaan(data)
         }
-
-        // conn.promise().execute("SELECT emp_lastname FROM hs_hr_employee")
-        //     .then(([rows, fields]) => {
-        //         console.log(rows)
-        //         res.status(200).send({
-        //             status:200,
-        //             data:rows,
-        //             message:"Success Get Table hs_hr_employee"
-        //         })
-        //     })
-        //     .catch((err) => {
-        //         console.log("Failed Execute Query "+String(err.sqlMessage))
-
-        //         res.status(400).send({
-        //             status:400,
-        //             data:{},
-        //             message:String(err.sqlMessage)
-        //         })
-        //     })
-        //     .finally(() => conn.end())
 
         console.log(lastIdEmployee)
         res.status(200).send({
