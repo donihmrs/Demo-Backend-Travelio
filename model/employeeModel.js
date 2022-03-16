@@ -43,6 +43,22 @@ employeeModel.lastEmployeeId = async (db) => {
             .finally(() => conn.end())
 }
 
+employeeModel.getAllEmployee = async (db) => {
+    const conn = await mysqlConf.conn(db);
+
+    return await conn.promise().execute("SELECT emp_number,emp_lastname,emp_firstname,emp_middle_name,employee_id FROM hs_hr_employee;")
+            .then(([rows, fields]) => {
+                console.log("Berhasil get all employee")
+
+                return lib.responseSuccess(rows, "Berhasil get all employee_id dari table hs_hr_employee")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 employeeModel.insertLamaran = async (data) => {
     const conn = await mysqlConf.conn(data.database);
     const values = [data.id_emp,data.jabatan,data.gajiTerakhir,data.gajiDiharapkan,data.tgl_masuk];

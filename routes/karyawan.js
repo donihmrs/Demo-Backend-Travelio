@@ -9,4 +9,8 @@ router.post('/addKandidat', function(req, res, next) {
     karyawan.addKandidat(req,res,next)
 });
 
+router.get('/getAllKaryawan', function(req, res, next) {
+    karyawan.getAllKaryawan(req,res,next)
+});
+
 module.exports = router;

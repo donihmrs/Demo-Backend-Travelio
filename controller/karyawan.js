@@ -607,7 +607,7 @@ karyawan.addKandidat = async (req, res, next) => {
         console.log(lastIdEmployee)
         res.status(200).send({
             status:200,
-            data:{},
+            data:lastIdEmployee,
             message:"Selamat "+namaKaryawanForm+", Anda berhasil input data ke sistem. Terima kasih"
         })
     } catch(err) {
@@ -618,6 +618,10 @@ karyawan.addKandidat = async (req, res, next) => {
             message:"Error, Please check code or server"
         })
     }
+}
+
+karyawan.getAllKaryawan = async (req, res, next) => {
+    return await employeeModel.getAllEmployee()
 }
 
 module.exports = karyawan;
