@@ -5,12 +5,16 @@ const appDir = path.dirname(require.main.filename);
 const token = require(appDir+'/controller/token')
 const setting = require(appDir+'/controller/setting')
 
-router.post('/addAsuransi', function(req, res, next) {
-    setting.addAsuransi(req,res,next)
+router.post('/addPemotongan', function(req, res, next) {
+    setting.addPemotongan(req,res,next)
 });
 
-router.get('/getAsuransi', function(req, res, next) {
-    setting.getAsuransi(req,res,next)
+router.get('/getPemotongan', function(req, res, next) {
+    setting.getPemotongan(req,res,next)
+});
+
+router.post('/statusPemotongan', function(req, res, next) {
+    setting.statusData(req,res,next)
 });
 
 module.exports = router;
