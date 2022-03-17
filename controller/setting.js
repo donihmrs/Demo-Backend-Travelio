@@ -28,8 +28,6 @@ setting.addPemotongan = async (req, res, next) => {
             insertUpdate = await pemotonganModel.update(data)
         }
 
-        console.log(insertUpdate)
-
         if (insertUpdate.status == 200) {
             res.status(200).send(insertUpdate)
         } else {
@@ -60,7 +58,7 @@ setting.statusData =  async (req, res, next) => {
     if (req.body.status == 1) {
         status = 0
     }
-    
+
     data['nama'] = req.body.nama
     data['status'] = status
 
@@ -70,10 +68,6 @@ setting.statusData =  async (req, res, next) => {
     } else {
         res.status(400).send(getData)
     }
-}
-
-setting.addPajak = async (req, res, next) => {
-
 }
 
 module.exports = setting;

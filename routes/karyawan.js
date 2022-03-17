@@ -13,4 +13,8 @@ router.get('/getAllKaryawan', function(req, res, next) {
     karyawan.getAllKaryawan(req,res,next)
 });
 
+router.post('/addPemotongan', function(req, res, next) {
+    karyawan.addPemotongan(req,res,next)
+});
+
 module.exports = router;
