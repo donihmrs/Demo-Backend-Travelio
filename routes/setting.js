@@ -13,6 +13,10 @@ router.get('/getPemotongan', function(req, res, next) {
     setting.getPemotongan(req,res,next)
 });
 
+router.get('/getPemotonganAjax', function(req, res, next) {
+    setting.getPemotonganAjax(req,res,next)
+});
+
 router.post('/statusPemotongan', function(req, res, next) {
     setting.statusData(req,res,next)
 });

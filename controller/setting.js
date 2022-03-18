@@ -49,6 +49,17 @@ setting.getPemotongan =  async (req, res, next) => {
     }
 }
 
+setting.getPemotonganAjax =  async (req, res, next) => {
+    const db = req.query.database
+
+    const getData = await pemotonganModel.getAllSelectedOption(db)
+    if (getData.status == 200 && getData.data.length > 0) {
+        res.status(200).send(getData)
+    } else {
+        res.status(400).send(getData)
+    }
+}
+
 setting.statusData =  async (req, res, next) => {
     let data = {}
     let status = 1

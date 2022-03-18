@@ -623,8 +623,10 @@ karyawan.addKandidat = async (req, res, next) => {
 karyawan.getAllKaryawan = async (req, res, next) => {
     let data = {}
     data['database'] = req.body.database
-
-    return await employeeModel.getAllEmployee(data)
+    
+    const getData =  await employeeModel.getAllEmployee(data)
+    
+    res.status(200).send(getData)
 }
 
 karyawan.addPemotongan = async (req, res, next) => {
