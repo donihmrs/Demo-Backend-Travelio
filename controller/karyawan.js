@@ -633,21 +633,28 @@ karyawan.addPemotongan = async (req, res, next) => {
     try {
         let data = {}
         data['database'] = req.body.database
-
         data['nama'] = req.body.nama
-        data['type'] = req.body.type
-        data['byrCompany'] = req.body.byrPerusahaan
-        data['byrKaryawan'] = req.body.byrKaryawan
+        data['jenis'] = req.body.jenis
+        data['nilai'] = req.body.nilai
+        data['keterangan'] = req.body.keterangan
+        const getTglMulai = req.body.tanggalMulai
+        const getTglAkhir = req.body.tanggalAkhir
 
-        const cekData = await pemotonganModel.cekData(data)
+        const tglMulai = getTglMulai.year +'-'+ lib.dateMonth(getTglMulai.month) +'-'+ lib.dateDay(getTglMulai.day)
+        const tglAkhir = getTglAkhir.year +'-'+ lib.dateMonth(getTglAkhir.month) +'-'+ lib.dateDay(getTglAkhir.day)
+
+        data['tglMulai'] = tglMulai
+        data['tglAkhir'] = tglAkhir
+
+        const cekData = await employeeModel.cekDataPemotongan(data)
 
         let insertUpdate;
         
         if (cekData.data.length == 0) {
-            insertUpdate = await pemotonganModel.insert(data)
+            insertUpdate = await employeeModel.insertPemotongan(data)
         } else {
-            data['id'] = cekData.data[0].pemotongan_id
-            insertUpdate = await pemotonganModel.update(data)
+            data['id'] = cekData.data[0].emp_potongan_id
+            insertUpdate = await employeeModel.updatePemotongan(data)
         }
 
         if (insertUpdate.status == 200) {
@@ -660,10 +667,10 @@ karyawan.addPemotongan = async (req, res, next) => {
     }
 }
 
-karyawan.getPemotongan =  async (req, res, next) => {
+karyawan.getAllPemotongan =  async (req, res, next) => {
     const db = req.query.database
 
-    const getData = await pemotonganModel.getAll(db)
+    const getData = await employeeModel.getAllPemotongan(db)
     if (getData.status == 200 && getData.data.length > 0) {
         res.status(200).send(getData)
     } else {

@@ -224,12 +224,12 @@ employeeModel.insertRiwayatPekerjaan = async (data) => {
 
 employeeModel.insertPemotongan = async (data) => {
     const conn = await mysqlConf.conn(data.database);
-    const values = [data.nama,data.type,data.byrCompany,data.byrKaryawan];
+    const values = [data.nama,data.jenis,data.nilai,data.keterangan,data.tglMulai,data.tglAkhir];
     
-    return await conn.promise().execute("INSERT INTO ohrm_pemotongan (pemot_nama,pemot_type,pemot_byr_company,pemot_byr_karyawan) VALUES (?,?,?,?) ",values)
+    return await conn.promise().execute("INSERT INTO hs_hr_emp_potongan (emp_number,pemotongan_id,potongan_nilai,emp_potong_keterangan,start_date,end_date) VALUES (?,?,?,?,?,?) ",values)
             .then(([result, fields]) => {
-                console.log("Berhasil tambah data pemotongan baru "+data.nama)
-                return lib.responseSuccess(data.nama, "Berhasil insert data ke table ohrm_pemotongan")
+                console.log("Berhasil tambah data pemotongan karyawan baru "+data.nama)
+                return lib.responseSuccess(data.nama, "Berhasil insert data ke table hs_hr_emp_potongan")
             })
             .catch((err) => {
                 console.log("Failed Execute Query "+String(err))
@@ -241,11 +241,14 @@ employeeModel.insertPemotongan = async (data) => {
 employeeModel.getAllPemotongan = async (db) => {
     const conn = await mysqlConf.conn(db);
 
-    return await conn.promise().execute("SELECT * FROM ohrm_pemotongan;")
+    return await conn.promise().execute("SELECT  empPotong.* , emp.emp_firstname,emp.emp_lastname,emp.emp_middle_name,potong.pemot_nama,potong.pemot_byr_karyawan,potong.pemot_type "+ 
+            "FROM `hs_hr_emp_potongan` AS empPotong LEFT JOIN `hs_hr_employee` AS emp "+
+            "ON emp.emp_number = empPotong.emp_number LEFT JOIN `ohrm_pemotongan` AS potong "+
+            "ON potong.pemotongan_id = empPotong.pemotongan_id;")
             .then(([rows, fields]) => {
                 console.log("Berhasil get all pemotongan")
                 
-                return lib.responseSuccess(rows, "Berhasil get all pemotongan dari table ohrm_pemotongan")
+                return lib.responseSuccess(rows, "Berhasil get all pemotongan dari table hs_hr_emp_potongan")
             })
             .catch((err) => {
                 console.log("Failed Execute Query "+String(err))
@@ -256,12 +259,12 @@ employeeModel.getAllPemotongan = async (db) => {
 
 employeeModel.updatePemotongan = async (data) => {
     const conn = await mysqlConf.conn(data.database);
-    const values = [data.type,data.byrCompany,data.byrKaryawan,data.id];
+    const values = [data.nilai,data.keterangan,data.tglMulai,data.tglAkhir,data.id];
     
-    return await conn.promise().execute("UPDATE ohrm_pemotongan SET pemot_type = ?,pemot_byr_company = ?,pemot_byr_karyawan = ? WHERE pemotongan_id = ?",values)
+    return await conn.promise().execute("UPDATE hs_hr_emp_potongan SET potongan_nilai = ?,emp_potong_keterangan = ?,start_date = ?, end_date = ? WHERE emp_potongan_id = ?",values)
             .then(([result, fields]) => {
-                console.log("Berhasil Update data pemotongan "+data.nama)
-                return lib.responseSuccess(data.nama, "Berhasil Update data ke table ohrm_pemotongan")
+                console.log("Berhasil Update data pemotongan karyawan "+data.nama)
+                return lib.responseSuccess(data.nama, "Berhasil Update data pemotongan karyawan ke table hs_hr_emp_potongan")
             })
             .catch((err) => {
                 console.log("Failed Execute Query "+String(err))
@@ -273,11 +276,11 @@ employeeModel.updatePemotongan = async (data) => {
 employeeModel.cekDataPemotongan = async (data) => {
     const conn = await mysqlConf.conn(data.database);
 
-    return await conn.promise().execute("SELECT pemotongan_id,pemot_nama FROM ohrm_pemotongan WHERE pemot_nama = ? ",[data.nama])
+    return await conn.promise().execute("SELECT emp_potongan_id,emp_number,pemotongan_id FROM hs_hr_emp_potongan WHERE pemotongan_id = ? AND emp_number = ? ",[data.jenis,data.nama])
             .then(([rows, fields]) => {
-                console.log("Berhasil cek data pemotongan")
+                console.log("Berhasil cek data karyawan pemotongan")
                 
-                return lib.responseSuccess(rows, "Berhasil cek data pemotongan dari table ohrm_pemotongan")
+                return lib.responseSuccess(rows, "Berhasil cek data karyawan pemotongan dari table hs_hr_emp_potongan")
             })
             .catch((err) => {
                 console.log("Failed Execute Query "+String(err))
