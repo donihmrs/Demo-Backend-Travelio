@@ -678,4 +678,17 @@ karyawan.getAllPemotongan =  async (req, res, next) => {
     }
 }
 
+karyawan.deletePemotongan =  async (req, res, next) => {
+    let data = {} 
+    data['database'] = req.body.database
+    data['id'] = req.body.id
+
+    const getData = await employeeModel.deletePemotongan(data)
+    if (getData.status == 200) {
+        res.status(200).send(getData)
+    } else {
+        res.status(400).send(getData)
+    }
+}
+
 module.exports = karyawan;

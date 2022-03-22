@@ -289,4 +289,20 @@ employeeModel.cekDataPemotongan = async (data) => {
             .finally(() => conn.end())
 }
 
+employeeModel.deletePemotongan = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    const values = [data.id];
+    
+    return await conn.promise().execute("DELETE FROM hs_hr_emp_potongan WHERE emp_potongan_id = ?",values)
+            .then(([result, fields]) => {
+                console.log("Berhasil Delete data pemotongan")
+                return lib.responseSuccess(result, "Berhasil Delete data pemotongan")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 module.exports = employeeModel;

@@ -21,4 +21,8 @@ router.get('/getAllPemotongan', function(req, res, next) {
     karyawan.getAllPemotongan(req,res,next)
 });
 
+router.delete('/deletePemotongan', function(req, res, next) {
+    karyawan.deletePemotongan(req,res,next)
+});
+
 module.exports = router;
