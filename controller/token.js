@@ -26,4 +26,25 @@ token.verifyJwt = (req, res, next) => {
     })
 }
 
+token.getHrm = async () => {
+    const setData = {}
+    setData['client_id'] = process.env.CLIENT_ID
+    setData['client_secret'] = process.env.CLIENT_SECRET
+    setData['grant_type'] = "client_credentials"
+    setData['username'] = process.env.CLIENT_USERNAME
+    setData['password'] = process.env.CLIENT_PASSWORD
+       
+    return await axios.post(process.env.URL_API_HRM+"/oauth/issueToken",setData,{
+        headers:{
+            'content-type': 'application/json'
+        }
+    })
+      .then(function (response) {
+        return response.data;
+      })
+      .catch(function (error) {
+        console.log(error);
+        return 0;
+      });
+}
 module.exports = token;
