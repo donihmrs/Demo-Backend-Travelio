@@ -25,24 +25,101 @@ report.getPayroll =  async (req, res, next) => {
     let resObj = {}
 
     if (getData.status == 200 && getData.data.length > 0) {
+        let allGaji = 0
+        let allPemotongan = 0
+        let allCompany = 0
 
         getData.data.forEach(ele => {
             if (resObj[ele.emp_number] == undefined) {
-                resObj[ele.emp_number] = []
-                resObj["totalPot_"+ele.emp_number] = 0
-                resObj[ele.emp_number].push(ele)
-            } else {
-                if (ele.potongan_nilai !== 0) {
-                    resObj["totalPot_"+ele.emp_number] += ele.potongan_nilai;
+                resObj[ele.emp_number] = {}
+                resObj[ele.emp_number]['gajiBersih'] = ele.ebsal_basic_salary
+                resObj[ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                resObj[ele.emp_number]['namaSalary'] = ele.salary_component
+                resObj[ele.emp_number]['pemotongan'] = []
+
+                resObj[ele.emp_number]['totalPotongan'] = 0
+                resObj[ele.emp_number]['companyPotongan'] = 0
+                resObj[ele.emp_number]['gajiNett'] = parseInt(ele.ebsal_basic_salary)
+
+                allGaji += parseInt(ele.ebsal_basic_salary)
+
+                const objDetail = {}
+                if (ele.potongan_nilai != 0) {
+                    if (ele.pemot_type == "%") {
+                        objDetail['debit'] = ele.ebsal_basic_salary * ele.potongan_nilai / 100                      
+                        objDetail['company'] = 0
+                    } else {
+                        objDetail['debit'] = ele.potongan_nilai;
+                        objDetail['company'] = 0
+                    } 
                 } else {
-                    if (ele.pemot_byr_karyawan != 0) {
-                        resObj["totalPot_"+ele.emp_number] += ele.ebsal_basic_salary * ele.pemot_byr_karyawan / 100
+                    if (ele.pemot_type == "%" && parseInt(ele.pemot_byr_karyawan) != 0) {
+                        objDetail['debit'] = ele.ebsal_basic_salary * parseInt(ele.pemot_byr_karyawan) / 100
+                    } else {
+                        objDetail['debit'] = parseInt(ele.pemot_byr_karyawan)
+                    }
+
+                    if (ele.pemot_type == "%" && parseInt(ele.pemot_byr_company) != 0) {
+                        objDetail['company'] = ele.ebsal_basic_salary * parseInt(ele.pemot_byr_company) / 100
+                    } else {
+                        objDetail['company'] = parseInt(ele.pemot_byr_company)
                     }
                 }
+
+                resObj[ele.emp_number]['totalPotongan'] += objDetail['debit']
+                resObj[ele.emp_number]['gajiNett'] -= objDetail['debit']
+                resObj[ele.emp_number]['companyPotongan'] += objDetail['company']
                 
-                resObj[ele.emp_number].push(ele)
+                allGaji -= objDetail['debit']
+                allPemotongan += objDetail['debit']
+                allCompany += objDetail['company']
+
+                objDetail['namaPemotongan'] = ele.pemot_nama
+                objDetail['potongKeterangan'] = ele.emp_potong_keterangan
+                
+                resObj[ele.emp_number]['pemotongan'].push(objDetail)
+            } else {
+                const objDetail = {}
+                if (ele.potongan_nilai != 0) {
+                    if (ele.pemot_type == "%") {
+                        objDetail['debit'] = ele.ebsal_basic_salary * ele.potongan_nilai / 100                      
+                        objDetail['company'] = 0
+                    } else {
+                        objDetail['debit'] = ele.potongan_nilai;
+                        objDetail['company'] = 0
+                    }
+                } else {
+                    if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_karyawan) != 0) {
+                        objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
+                    } else {
+                        objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
+                    }
+
+                    if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_company) != 0) {
+                        objDetail['company'] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_company) / 100
+                    } else {
+                        objDetail['company'] = parseFloat(ele.pemot_byr_company)
+                    }
+                }
+
+                resObj[ele.emp_number]['totalPotongan'] += objDetail['debit']
+                resObj[ele.emp_number]['gajiNett'] -= objDetail['debit']
+                resObj[ele.emp_number]['companyPotongan'] += objDetail['company']
+                
+                allGaji -= objDetail['debit']
+                allPemotongan += objDetail['debit']
+                allCompany += objDetail['company']
+
+                objDetail['namaPemotongan'] = ele.pemot_nama
+                objDetail['potongKeterangan'] = ele.emp_potong_keterangan
+                
+                resObj[ele.emp_number]['pemotongan'].push(objDetail)
             }
         });
+
+        resObj['allGaji'] = allGaji
+        resObj['allPemotongan'] = allPemotongan
+        resObj['allCompany'] = allCompany
 
         getData.data = resObj
         res.status(200).send(getData)
