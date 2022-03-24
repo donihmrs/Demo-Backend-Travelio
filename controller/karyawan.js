@@ -640,8 +640,15 @@ karyawan.addPemotongan = async (req, res, next) => {
         const getTglMulai = req.body.tanggalMulai
         const getTglAkhir = req.body.tanggalAkhir
 
-        const tglMulai = getTglMulai.year +'-'+ lib.dateMonth(getTglMulai.month) +'-'+ lib.dateDay(getTglMulai.day)
-        const tglAkhir = getTglAkhir.year +'-'+ lib.dateMonth(getTglAkhir.month) +'-'+ lib.dateDay(getTglAkhir.day)
+        let tglMulai = "0000-00-00";
+        let tglAkhir = "0000-00-00";
+        
+        if (getTglMulai.year !== undefined) {
+            tglMulai = getTglMulai.year +'-'+ lib.dateMonth(getTglMulai.month) +'-'+ lib.dateDay(getTglMulai.day)
+        }
+        if (getTglAkhir.year !== undefined) {
+            tglAkhir = getTglAkhir.year +'-'+ lib.dateMonth(getTglAkhir.month) +'-'+ lib.dateDay(getTglAkhir.day)
+        }
 
         data['tglMulai'] = tglMulai
         data['tglAkhir'] = tglAkhir
