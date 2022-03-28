@@ -7,9 +7,9 @@ const pemotonganModel = {}
 
 pemotonganModel.insert = async (data) => {
     const conn = await mysqlConf.conn(data.database);
-    const values = [data.nama,data.type,data.byrCompany,data.byrKaryawan];
+    const values = [data.nama,data.type,data.byrCompany,data.byrKaryawan,data.group];
     
-    return await conn.promise().execute("INSERT INTO ohrm_pemotongan (pemot_nama,pemot_type,pemot_byr_company,pemot_byr_karyawan) VALUES (?,?,?,?) ",values)
+    return await conn.promise().execute("INSERT INTO ohrm_pemotongan (pemot_nama,pemot_type,pemot_byr_company,pemot_byr_karyawan,pemot_group) VALUES (?,?,?,?,?) ",values)
             .then(([result, fields]) => {
                 console.log("Berhasil tambah data pemotongan baru "+data.nama)
                 return lib.responseSuccess(data.nama, "Berhasil insert data ke table ohrm_pemotongan")
@@ -55,9 +55,9 @@ pemotonganModel.getAllSelectedOption = async (db) => {
 
 pemotonganModel.update = async (data) => {
     const conn = await mysqlConf.conn(data.database);
-    const values = [data.type,data.byrCompany,data.byrKaryawan,data.id];
+    const values = [data.type,data.byrCompany,data.byrKaryawan,data.group,data.id];
     
-    return await conn.promise().execute("UPDATE ohrm_pemotongan SET pemot_type = ?,pemot_byr_company = ?,pemot_byr_karyawan = ? WHERE pemotongan_id = ?",values)
+    return await conn.promise().execute("UPDATE ohrm_pemotongan SET pemot_type = ?,pemot_byr_company = ?,pemot_byr_karyawan = ?,pemot_group = ? WHERE pemotongan_id = ?",values)
             .then(([result, fields]) => {
                 console.log("Berhasil Update data pemotongan "+data.nama)
                 return lib.responseSuccess(data.nama, "Berhasil Update data ke table ohrm_pemotongan")

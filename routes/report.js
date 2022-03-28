@@ -9,4 +9,8 @@ router.get('/getPayroll', function(req, res, next) {
     report.getPayroll(req,res,next)
 });
 
+router.get('/getPayrollJurnal', function(req, res, next) {
+    report.getPayrollForJurnal(req,res,next)
+});
+
 module.exports = router;

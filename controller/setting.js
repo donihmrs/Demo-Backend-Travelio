@@ -16,6 +16,7 @@ setting.addPemotongan = async (req, res, next) => {
         data['type'] = req.body.type
         data['byrCompany'] = req.body.byrPerusahaan
         data['byrKaryawan'] = req.body.byrKaryawan
+        data['group'] = req.body.group
 
         const cekData = await pemotonganModel.cekData(data)
 
