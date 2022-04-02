@@ -71,7 +71,7 @@ lib.restoreFile = async (path,file) => {
   }
 }
 
-lib.responseSuccess = async (data={},message) => {
+lib.responseSuccess = (data={},message) => {
   let objRes = {}
   objRes['status'] = 200
   objRes['data'] = data
@@ -80,7 +80,7 @@ lib.responseSuccess = async (data={},message) => {
   return objRes
 }
 
-lib.responseError = async (status,message) => {
+lib.responseError = (status,message) => {
   let objRes = {}
   objRes['status'] = status
   objRes['data'] = {}
