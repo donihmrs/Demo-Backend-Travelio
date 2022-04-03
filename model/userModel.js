@@ -8,7 +8,7 @@ const userModel = {}
 userModel.getByUser = async (data) => {
     const conn = await mysqlConf.conn(data.database);
 
-    return await conn.promise().execute("SELECT user_password FROM ohrm_user WHERE user_name = ? AND id_company = ? ",[data.username,data.company])
+    return await conn.promise().execute("SELECT user_password FROM ohrm_user WHERE user_name = ? AND company_id = ? ",[data.username,data.company])
             .then(([rows, fields]) => {
                 if (rows.length > 0) {
                     return lib.responseSuccess(rows, "Berhasil cek data username dari table ohrm_user")
