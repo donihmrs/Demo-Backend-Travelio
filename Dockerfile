@@ -6,5 +6,6 @@ COPY ./package-lock.json /app/package-lock.json
 
 RUN npm install
 
+CMD ["node","index"]
 EXPOSE 3333
 #docker build -t node:erpbe .
