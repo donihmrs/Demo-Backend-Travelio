@@ -1,0 +1,5 @@
+web:
+    image: node:erpbe
+    env_file: .env
+    ports:
+        - "3333:3333"
