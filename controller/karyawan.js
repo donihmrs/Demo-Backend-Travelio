@@ -6,6 +6,7 @@ const lib = require(appDir+'/controller/lib')
 const employeeModel = require(appDir+'/model/employeeModel')
 const bahasaModel = require(appDir+'/model/bahasaModel')
 const skillModel = require(appDir+'/model/skillModel')
+const jobModel = require(appDir+'/model/jobModel')
 
 const karyawan = {}
 
@@ -695,6 +696,149 @@ karyawan.deletePemotongan =  async (req, res, next) => {
         res.status(200).send(getData)
     } else {
         res.status(400).send(getData)
+    }
+}
+
+karyawan.importAllEmp = async (req, res, next) => {
+    try {
+        const getData = req.body.data
+
+        let data = {}
+        data['database'] = req.body.database
+        data['form'] = []
+
+        await getData.forEach(async ele => {
+            data['emp_id'] = ele['ID ']
+            data['npwp'] = ele['NPWP']
+
+            const getFullName = ele['Full Name'];
+            const splitFullName = getFullName.split(" ");
+            if (splitFullName.length == 1) {
+                data['namaAkhir'] = ""
+                data['namaDepan'] = splitFullName[0]
+                data['namaTengah'] = ""
+            } else if (splitFullName.length == 2) {
+                data['namaAkhir'] = splitFullName[1]
+                data['namaDepan'] = splitFullName[0]
+                data['namaTengah'] = ""
+            } else if (splitFullName.length > 2) {
+                data['namaAkhir'] = splitFullName[2]
+                data['namaDepan'] = splitFullName[0]
+                data['namaTengah'] = splitFullName[1]
+            } else {
+                data['namaAkhir'] = ""
+                data['namaDepan'] = ""
+                data['namaTengah'] = ""
+            }
+
+            const getTanggalLahir = ele['Date of Birth'];
+
+            if (typeof getTanggalLahir == "object") {
+                data['tempatLahir'] = ""
+                data['tanggalLahir'] = getTanggalLahir.date
+            } else {
+                const splitGetTanggalLahir = getTanggalLahir.split(",")              
+                const tempatLahir = splitGetTanggalLahir[0]
+                
+                data['tempatLahir'] = tempatLahir
+
+                if (splitGetTanggalLahir[1] == undefined) {
+                    data['tanggalLahir'] = "0000-00-00" ;
+                } else {
+                    const tglLahir = splitGetTanggalLahir[1].split("-")
+                    data['tanggalLahir'] = tglLahir[2]+"-"+tglLahir[1]+"-"+tglLahir[0] ;
+                }
+                
+            }
+            
+            data['join'] = ele['Join Date'].date;
+            data['alamat'] = ele['Address'];
+            data['division'] = ele['Division'];
+            data['phone'] = ele['Phone'];
+            data['ktp'] = ele['ID Number'];
+            data['kartu_keluarga'] = ele['Family Number'];
+            data['negara'] = 83;
+            data['email'] = ele['Email'];
+            
+            if (ele['Employee Status'] == "Permanent") {
+                data['status_emp'] = 1;
+            } else {
+                data['status_emp'] = 2;
+            }
+            
+            data['agama'] = ele['Religion'];
+            data['status_nikah'] = ele['Marital Status'];
+
+            if (ele['Gender'] == "Male") {
+                data['kelamin'] = 1;
+            } else {
+                data['kelamin'] = 2;
+            }
+
+            switch (ele['Tax Status']) {
+                case "TK":
+                    data['ptkp'] = 1;
+                    break;
+                case "K/0":
+                    data['ptkp'] = 2;
+                    break;
+                case "K/1":
+                    data['ptkp'] = 3;
+                    break;
+                case "K/2":
+                    data['ptkp'] = 4;
+                    break;
+                case "K/3":
+                    data['ptkp'] = 5;
+                    break;
+                default:
+                    data['ptkp'] = 1;
+                    break;
+            }
+
+            // await jobModel.getIdName(ele['Job Title']).then(async (idJob) => {
+            //     if (idJob.data == 0) {
+            //         let dataJob = {}
+            //         dataJob['database'] = req.body.database
+            //         dataJob['nama'] = ele['Job Title']
+
+            //         idJob = await jobModel.insertLastId(dataJob)
+            //     } 
+
+            //     console.log(idJob)
+            //     data['job'] = idJob.data;
+            // })
+
+            data['salary'] = ele['Basic Salary']
+
+            switch (ele['Keterangan']) {
+                case "Active":
+                    data['keterangan'] = 1
+                    break;
+                case "New Hire":
+                    data['keterangan'] = 3
+                    break;
+                case "Resign":
+                    data['keterangan'] = 2
+                    break;
+            
+                default:
+                    data['keterangan'] = 1
+                    break;
+            }
+
+            const tempData = [data.emp_id,data.npwp,data.namaDepan,data.namaTengah,data.namaAkhir,data.tempatLahir,data.tanggalLahir
+                ,data.join,data.alamat,data.phone,data.ktp,data.kartu_keluarga,data.negara,data.status_emp,data.agama
+                ,data.status_nikah,data.kelamin,data.ptkp,data.keterangan]
+
+            data['form'].push(tempData)
+        });
+
+        const insertUpdate = await employeeModel.importAllEmp(data)
+
+        res.status(200).send(insertUpdate)
+    } catch(e) {
+        res.status(500).send(e)
     }
 }
 

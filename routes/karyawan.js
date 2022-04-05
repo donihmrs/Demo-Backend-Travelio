@@ -25,4 +25,8 @@ router.delete('/deletePemotongan', function(req, res, next) {
     karyawan.deletePemotongan(req,res,next)
 });
 
+router.post('/importAllEmp', function(req, res, next) {
+    karyawan.importAllEmp(req,res,next)
+});
+
 module.exports = router;
