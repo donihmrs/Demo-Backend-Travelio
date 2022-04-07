@@ -23,14 +23,14 @@ absensiModel.insertUpdate = async (data) => {
 
 absensiModel.holiday = async (data) => {
     const conn = await mysqlConf.conn(data.database);
-    return await conn.promise().execute("SELECT emp_number FROM ohrm_holiday WHERE employee_id = '"+data.id+"';")
+    return await conn.promise().execute("SELECT  `date` AS holiDate FROM `ohrm_holiday` WHERE MONTH(`date`)  = "+data.bulan+" AND YEAR(`date`)  = "+data.tahun+";")
             .then(([rows, fields]) => {
                 if (rows.length > 0) {
-                    console.log("Berhasil get id employee number dari Id "+data.id)
-                    return lib.responseSuccess(rows[0].emp_number, "Berhasil get id employee dari table ohrm_holiday")
+                    console.log("Berhasil get tanggal holidays")
+                    return lib.responseSuccess(rows, "Berhasil get id employee dari table ohrm_holiday")
                 } else {
-                    console.log("Tidak ada ID emp "+data.id)
-                    return lib.responseSuccess(0, "tidak ada employee id pada table ohrm_holiday")
+                    console.log("Tidak ada data")
+                    return lib.responseSuccess([], "tidak ada tanggal holiday pada table ohrm_holiday")
                 }
             })
             .catch((err) => {

@@ -6,6 +6,7 @@ const axios = require('axios');
 const { get } = require('http');
 
 const reportModel = require(appDir+'/model/reportModel')
+const absensiModel = require(appDir+'/model/absensiModel')
 
 const report = {}
 
@@ -20,6 +21,8 @@ report.getPayroll =  async (req, res, next) => {
     data['database'] = db
     data['bulan'] = lib.dateMonth(bulan)
     data['tahun'] = tahun
+
+    const dataHoliday = await absensiModel.holiday(data)
 
     const getPtkp = await reportModel.ptkp(data)
     const dataPtkp = getPtkp.data
