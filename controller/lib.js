@@ -234,4 +234,33 @@ lib.convertUtc0 = (datetime) => {
   return new Date(datetime).toISOString().replace(/T/, ' ').replace(/\..+/, '')
 }
 
+lib.daysWork = (libur = 4) => {
+  const dt = new Date();
+  const month = dt.getMonth();
+  const year = dt.getFullYear();
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  let daysWork = 0
+
+  switch (daysInMonth) {
+    case 31:
+      const add31 = libur + 1
+      daysWork = daysInMonth - add31
+      break;
+    case 30:
+      daysWork = daysInMonth - libur
+      break;
+    case 29:
+      daysWork = daysInMonth - libur
+      break;
+    case 28:
+      daysWork = daysInMonth - libur
+      break;
+    default:
+      daysWork = 26
+      break;
+  }
+
+  return daysWork;
+}
 module.exports = lib;

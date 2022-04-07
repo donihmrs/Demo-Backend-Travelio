@@ -747,7 +747,11 @@ karyawan.importAllEmp = async (req, res, next) => {
                     data['tanggalLahir'] = "0000-00-00" ;
                 } else {
                     const tglLahir = splitGetTanggalLahir[1].split("-")
-                    data['tanggalLahir'] = tglLahir[2]+"-"+tglLahir[1]+"-"+tglLahir[0] ;
+                    if (tglLahir[1] !== undefined) {
+                        data['tanggalLahir'] = tglLahir[2]+"-"+tglLahir[1]+"-"+tglLahir[0].replace(/ /g,"") ;
+                    } else {
+                        data['tanggalLahir'] = "0000-00-00" ;
+                    }
                 }
                 
             }

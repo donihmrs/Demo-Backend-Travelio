@@ -21,4 +21,23 @@ absensiModel.insertUpdate = async (data) => {
             .finally(() => conn.end())
 }
 
+absensiModel.holiday = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    return await conn.promise().execute("SELECT emp_number FROM ohrm_holiday WHERE employee_id = '"+data.id+"';")
+            .then(([rows, fields]) => {
+                if (rows.length > 0) {
+                    console.log("Berhasil get id employee number dari Id "+data.id)
+                    return lib.responseSuccess(rows[0].emp_number, "Berhasil get id employee dari table ohrm_holiday")
+                } else {
+                    console.log("Tidak ada ID emp "+data.id)
+                    return lib.responseSuccess(0, "tidak ada employee id pada table ohrm_holiday")
+                }
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 module.exports = absensiModel;
