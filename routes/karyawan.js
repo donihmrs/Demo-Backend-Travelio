@@ -29,4 +29,9 @@ router.post('/importAllEmp', function(req, res, next) {
     karyawan.importAllEmp(req,res,next)
 });
 
+router.post('/absenFinger', function(req, res, next) {
+    karyawan.absenFinger(req,res,next)
+});
+
+
 module.exports = router;

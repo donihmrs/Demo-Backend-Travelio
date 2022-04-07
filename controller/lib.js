@@ -129,4 +129,109 @@ lib.capitalFirstText = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+lib.convertGmtToTimezone = (tz) => {
+  let timezone = ""
+  switch (tz) {
+      case "ETC/GMT+0":
+          timezone = "Africa/Abidjan"
+          break;
+      case "ETC/GMT+1":
+          timezone = "Europe/Paris"
+          break;
+      case "ETC/GMT+2":
+          timezone = "Europe/Athens"
+          break;
+      case "ETC/GMT+3":
+          timezone = "Europe/Istanbul"
+          break;
+      case "ETC/GMT+4":
+          timezone = "Asia/Dubai"
+          break;
+      case "ETC/GMT+5":
+          timezone = "Asia/Samarkand"
+          break;
+      case "ETC/GMT+6":
+          timezone = "Asia/Dhaka"
+          break;
+      case "ETC/GMT+7":
+          timezone = "Asia/Jakarta"
+          break;
+      case "ETC/GMT+8":
+          timezone = "Asia/Singapore"
+          break;
+      case "ETC/GMT+9":
+          timezone = "Asia/Tokyo"
+          break;
+      case "ETC/GMT+10":
+          timezone = "Asia/Vladivostok"
+          break;
+      case "ETC/GMT+11":
+          timezone = "Australia/Sydney"
+          break;
+      case "ETC/GMT+12":
+          timezone = "Pacific/Majuro"
+          break;
+      case "ETC/GMT-0":
+          timezone = "Africa/Abidjan"
+          break;
+      case "ETC/GMT-1":
+          timezone = "Atlantic/Azores"
+          break;
+      case "ETC/GMT-2":
+          timezone = "America/Noronha"
+          break;
+      case "ETC/GMT-3":
+          timezone = "America/Santiago"
+          break;
+      case "ETC/GMT-4":
+          timezone = "America/Caracas"
+          break;
+      case "ETC/GMT-5":
+          timezone = "America/New_York"
+          break;
+      case "ETC/GMT-6":
+          timezone = "America/Chicago"
+          break;
+      case "ETC/GMT-7":
+          timezone = "America/Boise"
+          break;
+      case "ETC/GMT-8":
+          timezone = "America/Los_Angeles"
+          break;
+      case "ETC/GMT-9":
+          timezone = "America/Anchorage"
+          break;
+      case "ETC/GMT-10":
+          timezone = "America/Adak"
+          break;
+      case "ETC/GMT-11":
+          timezone = "Pacific/Pago_Pago"
+          break;
+      case "ETC/GMT-12":
+          timezone = "Pacific/Pago_Pago"
+          break;
+      default:
+          timezone = "Asia/Jakarta"
+          break;
+  }
+
+  return timezone;
+}
+
+lib.getTimezonSet = () => {
+  var hour = -(new Date().getTimezoneOffset() / 60)
+  var convertString = String(hour);
+
+  var strTimezone = "ETC/GMT+"+hour;
+  if (convertString.match(/-/ig)) {
+      strTimezone = "ETC/GMT"+hour;
+  }
+
+  return strTimezone;
+}
+
+lib.convertUtc0 = (datetime) => {
+  return new Date(datetime).toISOString().replace(/T/, ' ').replace(/\..+/, '')
+}
+
 module.exports = lib;

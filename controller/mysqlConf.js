@@ -15,10 +15,11 @@ mysqlConf.conn = async (db) => {
     
           connectionBackup.connect(err => {
             if (err) {
+              connectionBackup.end()
               console.log("Error Connect Default Database "+String(err.sqlMessage))
               reject(err)
             } else {
-              console.log("Success Connected Default Database "+process.env.MYSQL_DB_DEFAULT)
+              // console.log("Success Connected Default Database "+process.env.MYSQL_DB_DEFAULT)
               resolve(connectionBackup)
             }
           }) 
@@ -33,6 +34,7 @@ mysqlConf.conn = async (db) => {
     
           connection.connect(err => {
             if (err) {
+              connection.end()
               console.log("Error Connect Database "+String(err.sqlMessage))
 
               const connectionBackup = mysql.createConnection({
@@ -45,16 +47,17 @@ mysqlConf.conn = async (db) => {
 
               connectionBackup.connect(err => {
                 if (err) {
+                  connectionBackup.end()
                   console.log("Error Connect Default Database "+String(err.sqlMessage))
                   reject(err)
                 } else {
-                  console.log("Success Connected Default Database "+process.env.MYSQL_DB_DEFAULT)
+                  // console.log("Success Connected Default Database "+process.env.MYSQL_DB_DEFAULT)
                   resolve(connectionBackup)
                 }
               }) 
               
             } else {
-              console.log("Success Connected Database "+db)
+              // console.log("Success Connected Database "+db)
               resolve(connection)
             }
           })  

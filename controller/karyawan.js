@@ -6,6 +6,7 @@ const lib = require(appDir+'/controller/lib')
 const employeeModel = require(appDir+'/model/employeeModel')
 const bahasaModel = require(appDir+'/model/bahasaModel')
 const skillModel = require(appDir+'/model/skillModel')
+const absensiModel = require(appDir+'/model/absensiModel')
 const jobModel = require(appDir+'/model/jobModel')
 
 const karyawan = {}
@@ -834,6 +835,7 @@ karyawan.importAllEmp = async (req, res, next) => {
             data['form'].push(tempData)
         });
 
+        console.log(data['form'])
         const insertUpdate = await employeeModel.importAllEmp(data)
 
         res.status(200).send(insertUpdate)
@@ -842,4 +844,40 @@ karyawan.importAllEmp = async (req, res, next) => {
     }
 }
 
+karyawan.absenFinger = async (req, res, next) => {
+    try {
+        const getData = req.body.data
+    
+        getData.forEach(async ele => {
+            let data = {}
+            data['database'] = req.body.database
+            data['offset'] = String(-(new Date().getTimezoneOffset() / 60))
+            data['id'] = ele.id
+            data['datetime'] = ele.datetime
+            data['date'] = ele.date
+            data['dateUtc'] = lib.convertUtc0(ele.datetime)
+
+            const idEmp = await employeeModel.getIdEmp(data)
+            const empNumber = idEmp.data
+
+            data['idEmp'] = empNumber
+            
+            const statusAbsen = ele.status
+
+            if (empNumber !== 0) {
+                if (statusAbsen == '0') {
+                    data['status'] = "PUNCHED IN"                
+                } else {
+                    data['status'] = "PUNCHED OUT"
+                }
+
+                await absensiModel.insertUpdate(data)
+            }
+        });
+
+        res.status(200).send(lib.responseSuccess({}, "Berhasil insert Absensi"))
+    } catch (Err) {
+        res.status(500).send(Err)
+    }
+}
 module.exports = karyawan;
