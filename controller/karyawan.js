@@ -624,7 +624,7 @@ karyawan.addKandidat = async (req, res, next) => {
 
 karyawan.getAllKaryawan = async (req, res, next) => {
     let data = {}
-    data['database'] = req.body.database
+    data['database'] = req.query.database
     
     const getData =  await employeeModel.getAllEmployee(data)
     
