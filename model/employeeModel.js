@@ -308,9 +308,10 @@ employeeModel.deletePemotongan = async (data) => {
 employeeModel.importAllEmp = async (data) => {
     const conn = await mysqlConf.conn(data.database);
     const values = data.form;
+
     return await conn.promise().query("INSERT INTO hs_hr_employee (employee_id,emp_npwp,emp_firstname,emp_middle_name,emp_lastname,emp_tempat_lahir"+
             ",emp_birthday,joined_date,emp_street1,emp_mobile,emp_no_ktp,emp_no_kk,nation_code,emp_status,emp_agama"+
-            ",emp_marital_status,emp_gender,ptkp_id,status_karyawan) VALUES ? ON DUPLICATE KEY UPDATE custom10 = NULL ",[values])
+            ",emp_marital_status,emp_gender,ptkp_id,status_karyawan,job_title_code) VALUES ? ON DUPLICATE KEY UPDATE custom10 = NULL ",[values])
             .then(([result, fields]) => {
                 console.log("Berhasil import data")
                 return lib.responseSuccess(result, "Berhasil insert data ke table hs_hr_employee")
