@@ -4,7 +4,8 @@
   "description": "API Backend HRM",
   "main": "index.js",
   "scripts": {
-    "test": "node index"
+    "start": "node index",
+    "dev": "nodemon index"
   },
   "keywords": [
     "middleware",

@@ -59,6 +59,22 @@ employeeModel.getAllEmployee = async (data) => {
             .finally(() => conn.end())
 }
 
+employeeModel.getAllEmployeeNumber = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+
+    return await conn.promise().execute("SELECT emp_number,employee_id FROM hs_hr_employee;")
+            .then(([rows, fields]) => {
+                console.log("Berhasil get all employee number")
+
+                return lib.responseSuccess(rows, "Berhasil get all employee_id, emp number dari table hs_hr_employee")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 employeeModel.insertLamaran = async (data) => {
     const conn = await mysqlConf.conn(data.database);
     const values = [data.id_emp,data.jabatan,data.gajiTerakhir,data.gajiDiharapkan,data.tgl_masuk];
@@ -311,7 +327,7 @@ employeeModel.importAllEmp = async (data) => {
 
     return await conn.promise().query("INSERT INTO hs_hr_employee (employee_id,emp_npwp,emp_firstname,emp_middle_name,emp_lastname,emp_tempat_lahir"+
             ",emp_birthday,joined_date,emp_street1,emp_mobile,emp_no_ktp,emp_no_kk,nation_code,emp_status,emp_agama"+
-            ",emp_marital_status,emp_gender,ptkp_id,status_karyawan,job_title_code) VALUES ? ON DUPLICATE KEY UPDATE custom10 = NULL ",[values])
+            ",emp_marital_status,emp_gender,ptkp_id,status_karyawan,job_title_code) VALUES ? ON DUPLICATE KEY UPDATE emp_no_ktp = VALUES(emp_no_ktp), emp_no_kk = VALUES(emp_no_kk), emp_street1 = VALUES(emp_street1), emp_status = VALUES(emp_status), emp_mobile = VALUES(emp_mobile), emp_marital_status = VALUES(emp_marital_status), ptkp_id = VALUES(ptkp_id),status_karyawan = VALUES(status_karyawan),job_title_code = VALUES(job_title_code)  ",[values])
             .then(([result, fields]) => {
                 console.log("Berhasil import data")
                 return lib.responseSuccess(result, "Berhasil insert data ke table hs_hr_employee")
@@ -328,10 +344,10 @@ employeeModel.getIdEmp = async (data) => {
     return await conn.promise().execute("SELECT emp_number FROM hs_hr_employee WHERE employee_id = '"+data.id+"';")
             .then(([rows, fields]) => {
                 if (rows.length > 0) {
-                    console.log("Berhasil get id employee number dari Id "+data.id)
+                    // console.log("Berhasil get id employee number dari Id "+data.id)
                     return lib.responseSuccess(rows[0].emp_number, "Berhasil get id employee dari table hs_hr_employee")
                 } else {
-                    console.log("Tidak ada ID emp "+data.id)
+                    // console.log("Tidak ada ID emp "+data.id)
                     return lib.responseSuccess(0, "tidak ada employee id pada table hs_hr_employee")
                 }
             })

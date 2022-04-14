@@ -7,11 +7,12 @@ const absensiModel = {}
 
 absensiModel.insertUpdate = async (data) => {
     const conn = await mysqlConf.conn(data.database);
-    const values = [data.idEmp,data.date,data.dateUtc,data.offset,data.datetime,data.status];
-    return await conn.promise().query("INSERT INTO ohrm_attendance_record (employee_id,punch_date,punch_in_utc_time,punch_in_time_offset,punch_in_user_time,state)"+
-        " VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE punch_out_utc_time = '"+data.dateUtc+"', punch_out_time_offset = '"+data.offset+"', punch_out_user_time = '"+data.datetime+"', state = '"+data.status+"' ",values)
+    const values = data.form
+
+    return await conn.promise().query("INSERT INTO ohrm_attendance_record (employee_id,punch_date,punch_in_utc_time,punch_in_time_offset,punch_in_user_time,state) "+
+        " VALUES ? ON DUPLICATE KEY UPDATE punch_out_utc_time = VALUES(punch_in_utc_time), punch_out_time_offset = VALUES(punch_in_time_offset), punch_out_user_time = VALUES(punch_in_user_time), state = VALUES(state) ",[values])
             .then(([result, fields]) => {
-                console.log("Berhasil insert abseni")
+                console.log("Berhasil insert absensi")
                 return lib.responseSuccess(result, "Berhasil insert data ke table ohrm_attendance_record")
             })
             .catch((err) => {

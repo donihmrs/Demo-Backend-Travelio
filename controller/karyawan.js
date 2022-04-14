@@ -881,9 +881,15 @@ karyawan.importAllEmp = async (req, res, next) => {
 
 karyawan.absenFinger = async (req, res, next) => {
     try {
+        let tempArr = {}
+        tempArr['database'] = req.body.database
+        tempArr['form'] = []
+
         const getData = req.body.data
-    
-        getData.forEach(async ele => {
+
+        const getDataEmp = await employeeModel.getAllEmployeeNumber(tempArr)
+        
+        await getData.forEach(async ele => {
             let data = {}
             data['database'] = req.body.database
             data['offset'] = String(-(new Date().getTimezoneOffset() / 60))
@@ -892,26 +898,39 @@ karyawan.absenFinger = async (req, res, next) => {
             data['date'] = ele.date
             data['dateUtc'] = lib.convertUtc0(ele.datetime)
 
-            const idEmp = await employeeModel.getIdEmp(data)
-            const empNumber = idEmp.data
+            const getIdEmp = getDataEmp.data.find(x => x.employee_id === ele.id);
 
-            data['idEmp'] = empNumber
+            if (getIdEmp === undefined) {
+                data['idEmp'] = 0
+            } else {
+                data['idEmp'] = getIdEmp.emp_number
+            }
             
             const statusAbsen = ele.status
 
-            if (empNumber !== 0) {
+            if (data['idEmp'] !== 0) {
                 if (statusAbsen == '0') {
                     data['status'] = "PUNCHED IN"                
                 } else {
                     data['status'] = "PUNCHED OUT"
                 }
 
-                await absensiModel.insertUpdate(data)
+                const arr = [data.idEmp, data.date, data.dateUtc, data.offset, data.datetime,data.status]
+
+                tempArr['form'].push(arr)
             }
         });
-
-        res.status(200).send(lib.responseSuccess({}, "Berhasil insert Absensi"))
+        
+        setTimeout(async () => {
+            if (tempArr['form'].length > 0) {
+                await absensiModel.insertUpdate(tempArr)
+                res.status(200).send(lib.responseSuccess({}, "Berhasil insert Absensi"))
+            } else {
+                res.status(200).send(lib.responseSuccess({}, "Tidak ada data yang di insert"))
+            }
+        }, 500);
     } catch (Err) {
+        console.log(Err)
         res.status(500).send(Err)
     }
 }
