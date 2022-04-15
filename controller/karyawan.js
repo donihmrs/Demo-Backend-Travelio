@@ -633,12 +633,6 @@ karyawan.getAllKaryawan = async (req, res, next) => {
 
 karyawan.addPemotongan = async (req, res, next) => {
     try {
-        let data = {}
-        data['database'] = req.body.database
-        data['nama'] = req.body.nama
-        data['jenis'] = req.body.jenis
-        data['nilai'] = req.body.nilai
-        data['keterangan'] = req.body.keterangan
         const getTglMulai = req.body.tanggalMulai
         const getTglAkhir = req.body.tanggalAkhir
 
@@ -652,18 +646,41 @@ karyawan.addPemotongan = async (req, res, next) => {
             tglAkhir = getTglAkhir.year +'-'+ lib.dateMonth(getTglAkhir.month) +'-'+ lib.dateDay(getTglAkhir.day)
         }
 
-        data['tglMulai'] = tglMulai
-        data['tglAkhir'] = tglAkhir
-
-        const cekData = await employeeModel.cekDataPemotongan(data)
-
         let insertUpdate;
-        
-        if (cekData.data.length == 0) {
-            insertUpdate = await employeeModel.insertPemotongan(data)
+ 
+        if (req.body.nama == 'all') {
+            let data = {}
+            data['database'] = req.body.database
+            data['form'] = []
+            
+            const getAllEmp = await employeeModel.getAllEmployee(data)
+
+            if (getAllEmp.status == 200) {
+                await getAllEmp.data.forEach(ele => {
+                    const tempData = [ele.emp_number,req.body.jenis,req.body.nilai,req.body.keterangan,tglMulai,tglAkhir]
+                    data['form'].push(tempData)
+                });
+
+                insertUpdate = await employeeModel.insertAllPemotongan(data)
+            }
         } else {
-            data['id'] = cekData.data[0].emp_potongan_id
-            insertUpdate = await employeeModel.updatePemotongan(data)
+            let data = {}
+            data['database'] = req.body.database
+            data['nama'] = req.body.nama
+            data['jenis'] = req.body.jenis
+            data['nilai'] = req.body.nilai
+            data['keterangan'] = req.body.keterangan
+            data['tglMulai'] = tglMulai
+            data['tglAkhir'] = tglAkhir
+
+            const cekData = await employeeModel.cekDataPemotongan(data)
+
+            if (cekData.data.length == 0) {
+                insertUpdate = await employeeModel.insertPemotongan(data)
+            } else {
+                data['id'] = cekData.data[0].emp_potongan_id
+                insertUpdate = await employeeModel.updatePemotongan(data)
+            }
         }
 
         if (insertUpdate.status == 200) {
@@ -693,6 +710,19 @@ karyawan.deletePemotongan =  async (req, res, next) => {
     data['id'] = req.body.id
 
     const getData = await employeeModel.deletePemotongan(data)
+    if (getData.status == 200) {
+        res.status(200).send(getData)
+    } else {
+        res.status(400).send(getData)
+    }
+}
+
+karyawan.deleteAllPemotonganByType =  async (req, res, next) => {
+    let data = {} 
+    data['database'] = req.body.database
+    data['type'] = req.body.jenis
+
+    const getData = await employeeModel.deleteAllPemotonganByType(data)
     if (getData.status == 200) {
         res.status(200).send(getData)
     } else {

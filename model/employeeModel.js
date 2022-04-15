@@ -254,6 +254,22 @@ employeeModel.insertPemotongan = async (data) => {
             .finally(() => conn.end())
 }
 
+employeeModel.insertAllPemotongan = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    const values = data.form;
+
+    return await conn.promise().query("INSERT INTO hs_hr_emp_potongan (emp_number,pemotongan_id,potongan_nilai,emp_potong_keterangan,start_date,end_date) VALUES ? ",[values])
+            .then(([result, fields]) => {
+                console.log("Berhasil insert all data pemotongan employee")
+                return lib.responseSuccess(result, "Berhasil insert all data pemotongan employee")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 employeeModel.getAllPemotongan = async (db) => {
     const conn = await mysqlConf.conn(db);
 
@@ -313,6 +329,22 @@ employeeModel.deletePemotongan = async (data) => {
             .then(([result, fields]) => {
                 console.log("Berhasil Delete data pemotongan")
                 return lib.responseSuccess(result, "Berhasil Delete data pemotongan")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
+employeeModel.deleteAllPemotonganByType = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    const values = [data.type];
+    
+    return await conn.promise().execute("DELETE FROM hs_hr_emp_potongan WHERE pemotongan_id = ?",values)
+            .then(([result, fields]) => {
+                console.log("Berhasil Delete data pemotongan by type")
+                return lib.responseSuccess(result, "Berhasil Delete data pemotongan by type")
             })
             .catch((err) => {
                 console.log("Failed Execute Query "+String(err))

@@ -18,11 +18,13 @@ report.getPayroll =  async (req, res, next) => {
     const db = req.query.database
     const bulan = req.query.bulan
     const tahun = req.query.tahun
+    const emp = req.query.emp
 
     let data = {} 
     data['database'] = db
     data['bulan'] = lib.dateMonth(bulan)
     data['tahun'] = tahun
+    data['emp'] = emp
 
     const dataHoliday = await absensiModel.holiday(data)
 
@@ -235,7 +237,14 @@ report.getPayroll =  async (req, res, next) => {
         }
 
         getData.data = resObj
-        res.status(200).send(getData)
+
+        if (Object.keys(getData.data).length === 0) {
+            getData.status = 400
+            getData.message = "Data is empty"
+            res.status(400).send(getData)
+        } else {
+            res.status(200).send(getData)
+        }
     }
 }
 
@@ -250,6 +259,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
     data['database'] = db
     data['bulan'] = lib.dateMonth(bulan)
     data['tahun'] = tahun
+    data['emp'] = "all"
 
     const getPtkp = await reportModel.ptkp(data)
     const getTarif = await tarifModel.getAll(data)
@@ -627,7 +637,14 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         objTotal['gajiNett'] = allGaji
 
         getData.data = objTotal
-        res.status(200).send(getData)
+
+        if (Object.keys(getData.data).length === 0) {
+            getData.status = 400
+            getData.message = "Data is empty"
+            res.status(400).send(getData)
+        } else {
+            res.status(200).send(getData)
+        }
     }
 }
 

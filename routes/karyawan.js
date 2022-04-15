@@ -17,6 +17,10 @@ router.post('/addPemotongan', function(req, res, next) {
     karyawan.addPemotongan(req,res,next)
 });
 
+router.post('/deleteAllPemotonganByType', function(req, res, next) {
+    karyawan.deleteAllPemotonganByType(req,res,next)
+});
+
 router.get('/getAllPemotongan', function(req, res, next) {
     karyawan.getAllPemotongan(req,res,next)
 });
