@@ -14,7 +14,7 @@ reportModel.payroll = async (data) => {
     }
 
     return await conn.promise().execute("SELECT empPotong.potongan_nilai,empPotong.emp_potong_keterangan,empPotong.start_date,empPotong.end_date,emp.emp_firstname,"+
-    "emp.emp_lastname,emp.emp_middle_name,emp.emp_number,emp.employee_id,potong.pemot_nama,potong.pemot_type,potong.pemot_group,potong.pemot_byr_karyawan,potong.pemot_byr_company,"+
+    "emp.emp_lastname,emp.emp_middle_name,emp.emp_number,emp.employee_id,potong.pemotongan_id,potong.pemot_nama,potong.pemot_type,potong.pemot_group,potong.pemot_byr_karyawan,potong.pemot_byr_company,"+
     "salary.ebsal_basic_salary,salary.salary_component "+  
     "FROM `hs_hr_emp_potongan` AS empPotong LEFT JOIN `hs_hr_employee` AS emp "+
     "ON emp.emp_number = empPotong.emp_number LEFT JOIN `ohrm_pemotongan` AS potong "+
