@@ -13,18 +13,18 @@ const absensiModel = require(appDir+'/model/absensiModel')
 const report = {}
 
 function convertBpjsKsRange(ele, bpjsKs) {
-    let byrBpjsKesehatan = parseInt(ele.ebsal_basic_salary)
+    let byrBpjsKesehatan = parseFloat(ele.ebsal_basic_salary)
 
     //BPJS KESEHATAN
     if (ele.pemotongan_id === 1) {
-        if (parseInt(ele.ebsal_basic_salary) <= parseInt(bpjsKs.tarif_min)) {
-            byrBpjsKesehatan = parseInt(bpjsKs.tarif_val_min)
-        } else if (parseInt(ele.ebsal_basic_salary) >= parseInt(bpjsKs.tarif_max)) {
-            byrBpjsKesehatan = parseInt(bpjsKs.tarif_val_max)
+        if (parseFloat(ele.ebsal_basic_salary) <= parseFloat(bpjsKs.tarif_min)) {
+            byrBpjsKesehatan = parseFloat(bpjsKs.tarif_val_min)
+        } else if (parseFloat(ele.ebsal_basic_salary) >= parseFloat(bpjsKs.tarif_max)) {
+            byrBpjsKesehatan = parseFloat(bpjsKs.tarif_val_max)
         }
     }
 
-    return parseInt(byrBpjsKesehatan)
+    return parseFloat(byrBpjsKesehatan)
 }
 
 report.getPayroll =  async (req, res, next) => {
@@ -78,9 +78,9 @@ report.getPayroll =  async (req, res, next) => {
                 const ele = dataPtkp[key];
                 if (gajiEmp[ele.emp_number] == undefined) {
                     gajiEmp[ele.emp_number] = {}
-                    gajiEmp[ele.emp_number]['gajiEmp'] = parseInt(ele.ebsal_basic_salary)
+                    gajiEmp[ele.emp_number]['gajiEmp'] = parseFloat(ele.ebsal_basic_salary)
                 } else {
-                    gajiEmp[ele.emp_number]['gajiEmp'] += parseInt(ele.ebsal_basic_salary) 
+                    gajiEmp[ele.emp_number]['gajiEmp'] += parseFloat(ele.ebsal_basic_salary) 
                 }
             }
         }
@@ -122,29 +122,29 @@ report.getPayroll =  async (req, res, next) => {
 
                     await dataTarif.forEach(eleTarif => {
                         if (eleTarif.tarifRangeId !== 1) {
-                            if (totalGajiSetahun >= parseInt(ele.nilai_setahun_ptkp)) {
+                            if (totalGajiSetahun >= parseFloat(ele.nilai_setahun_ptkp)) {
                                 let byrJabatan = totalGajiSetahun * 5 /100
                                 if (byrJabatan > 6000000) {
                                     byrJabatan = 6000000
                                 }
         
                                 const gajiKurangJabatan = totalGajiSetahun - byrJabatan
-                                let tarifMin = parseInt(eleTarif.tarif_min)
+                                let tarifMin = parseFloat(eleTarif.tarif_min)
 
-                                if (parseInt(eleTarif.tarif_min) !== 0) {
-                                    tarifMin = parseInt(eleTarif.tarif_min) - 1
+                                if (parseFloat(eleTarif.tarif_min) !== 0) {
+                                    tarifMin = parseFloat(eleTarif.tarif_min) - 1
                                 }
                                 
-                                const gajiKurangPtkp = (gajiKurangJabatan - parseInt(ele.nilai_setahun_ptkp)) - tarifMin
+                                const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(ele.nilai_setahun_ptkp)) - tarifMin
                                 
                                 if (eleTarif.tarif_group === 2 && eleTarif.tarif_type === "%") {
-                                    if (gajiKurangPtkp >= parseInt(eleTarif.tarif_min)) {
+                                    if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_min)) {
                                         const persenPtkp = parseFloat(eleTarif.tarif_val_max)
                                         let byrPph = (gajiKurangPtkp * persenPtkp / 100) / 12
                                         
                                         let byrPphMax = 0
-                                        if (gajiKurangPtkp >= parseInt(eleTarif.tarif_max)) {
-                                            byrPphMax = ((parseInt(eleTarif.tarif_max) - tarifMin) * persenPtkp / 100) / 12 
+                                        if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_max)) {
+                                            byrPphMax = ((parseFloat(eleTarif.tarif_max) - tarifMin) * persenPtkp / 100) / 12 
 
                                             if (byrPphMax < byrPph) {
                                                 byrPph = byrPphMax
@@ -191,9 +191,9 @@ report.getPayroll =  async (req, res, next) => {
 
                     resObj[ele.emp_number]['totalPotongan'] = 0
                     resObj[ele.emp_number]['companyPotongan'] = 0
-                    resObj[ele.emp_number]['gajiNett'] = parseInt(ele.ebsal_basic_salary)
+                    resObj[ele.emp_number]['gajiNett'] = parseFloat(ele.ebsal_basic_salary)
 
-                    allGaji += parseInt(ele.ebsal_basic_salary)
+                    allGaji += parseFloat(ele.ebsal_basic_salary)
 
                     const objDetail = {}
                     
@@ -223,7 +223,7 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['gajiNett'] -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                     resObj[ele.emp_number]['companyPotongan'] += objDetail['company'] + ptkpObj[ele.emp_number]['pajak']['pph21Company']
                     
-                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000
+                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett'])
                     
                     allGaji -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                     allPemotongan += objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
@@ -261,7 +261,7 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['gajiNett'] -= objDetail['debit']
                     resObj[ele.emp_number]['companyPotongan'] += objDetail['company']
                     
-                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000
+                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett']) 
 
                     allGaji -= objDetail['debit']
                     allPemotongan += objDetail['debit']
@@ -274,7 +274,7 @@ report.getPayroll =  async (req, res, next) => {
                 }
             });
 
-            resObj['allGaji'] = Math.round(allGaji / 1000) * 1000
+            resObj['allGaji'] = Math.round(allGaji)
             resObj['allPemotongan'] = allPemotongan
             resObj['allCompany'] = allCompany
         } 
@@ -291,7 +291,7 @@ report.getPayroll =  async (req, res, next) => {
 
                     resObj[key]['totalPotongan'] = ele.pajak.pph21Karyawan
                     resObj[key]['companyPotongan'] = ele.pajak.pph21Company
-                    resObj[key]['gajiNett'] = parseInt(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan
+                    resObj[key]['gajiNett'] = parseFloat(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan
                     resObj[key]['pajak'] = ele.pajak
 
                     resObj['allGaji'] += resObj[key]['gajiNett']
@@ -350,9 +350,9 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                 const ele = dataPtkp[key];
                 if (gajiEmp[ele.emp_number] == undefined) {
                     gajiEmp[ele.emp_number] = {}
-                    gajiEmp[ele.emp_number]['gajiEmp'] = parseInt(ele.ebsal_basic_salary)
+                    gajiEmp[ele.emp_number]['gajiEmp'] = parseFloat(ele.ebsal_basic_salary)
                 } else {
-                    gajiEmp[ele.emp_number]['gajiEmp'] += parseInt(ele.ebsal_basic_salary) 
+                    gajiEmp[ele.emp_number]['gajiEmp'] += parseFloat(ele.ebsal_basic_salary) 
                 }
             }
         }
@@ -393,34 +393,54 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                     ptkpObj[ele.emp_number]['pajak'] = {}
 
                     const totalGajiSetahun = ele.ebsal_basic_salary * 12
-                    if (totalGajiSetahun >= parseInt(ele.nilai_setahun_ptkp)) {
+                    if (totalGajiSetahun >= parseFloat(ele.nilai_setahun_ptkp)) {
                         let byrJabatan = totalGajiSetahun * 5 /100
                         if (byrJabatan > 6000000) {
                             byrJabatan = 6000000
                         }
 
-                        const gajiKurangJabatan = totalGajiSetahun - byrJabatan
-                        const gajiKurangPtkp = gajiKurangJabatan - parseInt(ele.nilai_setahun_ptkp)
-
                         let sumPpn = 0
-                        await dataTarif.forEach(ele => {
-                            if (ele.tarif_group === 2 && ele.tarif_type === "%") {
-                                if (gajiKurangPtkp >= ele.tarif_min) {
-                                    const persenPtkp = parseInt(ele.tarif_val_max)
-                                    sumPpn += (gajiKurangPtkp * persenPtkp / 100) / 12
+                        await dataTarif.forEach(eleTarif => {
+
+                            if (eleTarif.tarifRangeId !== 1) {
+                                let tarifMin = parseFloat(eleTarif.tarif_min)
+                                
+                                if (parseFloat(eleTarif.tarif_min) !== 0) {
+                                    tarifMin = parseFloat(eleTarif.tarif_min) - 1
+                                }
+                            
+                                const gajiKurangJabatan = totalGajiSetahun - byrJabatan
+                                const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(ele.nilai_setahun_ptkp)) - tarifMin
+                            
+                                if (eleTarif.tarif_group === 2 && eleTarif.tarif_type === "%") {
+                                    if (gajiKurangPtkp >= eleTarif.tarif_min) {
+                                        const persenPtkp = parseFloat(eleTarif.tarif_val_max)
+                                        let byrPph = (gajiKurangPtkp * persenPtkp / 100) / 12
+
+                                        let byrPphMax = 0
+                                        if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_max)) {
+                                            byrPphMax = ((parseFloat(eleTarif.tarif_max) - tarifMin) * persenPtkp / 100) / 12 
+
+                                            if (byrPphMax < byrPph) {
+                                                byrPph = byrPphMax
+                                            }
+                                        }
+
+                                        sumPpn += byrPph
+                                    }
                                 }
                             }
 
-                            if (ele.tarifRangeId === 1) {
-                                dataBpjsKs = ele
+                            if (eleTarif.tarifRangeId === 1) {
+                                dataBpjsKs = eleTarif
                             }
                         });
 
-                        ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] = (sumPpn * ele.byr_karyawan_ptkp / 5)
-                        ptkpObj[ele.emp_number]['pajak']['pph21Company'] = (sumPpn * ele.byr_company_ptkp / 5)
+                        ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] = Math.round((sumPpn * ele.byr_karyawan_ptkp / 5))
+                        ptkpObj[ele.emp_number]['pajak']['pph21Company'] = Math.round((sumPpn * ele.byr_company_ptkp / 5))
 
-                        objTotal['pajakKaryawan'] += (sumPpn * ele.byr_karyawan_ptkp / 5)
-                        objTotal['pajakCompany'] += (sumPpn * ele.byr_company_ptkp / 5) 
+                        objTotal['pajakKaryawan'] += Math.round((sumPpn * ele.byr_karyawan_ptkp / 5))
+                        objTotal['pajakCompany'] += Math.round((sumPpn * ele.byr_company_ptkp / 5))
 
                     } else {
                         ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] = 0
@@ -432,24 +452,23 @@ report.getPayrollForJurnal =  async (req, res, next) => {
 
         const getData = await reportModel.payroll(data)
         let resObj = {}
-        let allGaji = 0
 
         if (getData.status == 200 && getData.data.length > 0) {
             getData.data.forEach(ele => {
+                let byrBpjsKesehatan = parseFloat(ele.ebsal_basic_salary)
+
+                if (parseFloat(ele.ebsal_basic_salary) <= parseFloat(dataBpjsKs.tarif_min)) {
+                    byrBpjsKesehatan = parseFloat(dataBpjsKs.tarif_val_min)
+                } else if (parseFloat(ele.ebsal_basic_salary) >= parseFloat(dataBpjsKs.tarif_max)) {
+                    byrBpjsKesehatan = parseFloat(dataBpjsKs.tarif_val_max)
+                }
+
                 if (resObj[ele.emp_number] == undefined) {
                     resObj[ele.emp_number] = {}
-                    resObj[ele.emp_number]['gajiNett'] = parseInt(ele.ebsal_basic_salary)
-                    objTotal['gajiBruto'] += parseInt(ele.ebsal_basic_salary)
-                    allGaji += parseInt(ele.ebsal_basic_salary)
+                    // resObj[ele.emp_number]['gajiNett'] = parseFloat(ele.ebsal_basic_salary)
+                    objTotal['gajiBruto'] += parseFloat(ele.ebsal_basic_salary)
 
                     const objDetail = {}
-                    let byrBpjsKesehatan = parseInt(ele.ebsal_basic_salary)
-
-                    if (parseInt(ele.ebsal_basic_salary) <= parseInt(dataBpjsKs.tarif_min)) {
-                        byrBpjsKesehatan = parseInt(dataBpjsKs.tarif_val_min)
-                    } else if (parseInt(ele.ebsal_basic_salary) >= parseInt(dataBpjsKs.tarif_max)) {
-                        byrBpjsKesehatan = parseInt(dataBpjsKs.tarif_val_max)
-                    }
 
                     if (ele.potongan_nilai != 0) {
                         if (ele.pemot_type == "%") {
@@ -499,13 +518,13 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             }
                         } 
                     } else {
-                        if (ele.pemot_type == "%" && parseInt(ele.pemot_byr_karyawan) != 0) {
-                            objDetail['debit'] = ele.ebsal_basic_salary * parseInt(ele.pemot_byr_karyawan) / 100
+                        if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_karyawan) != 0) {
+                            objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
                             
                             if (ele.pemot_group == 1) {
-                                objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseInt(ele.pemot_byr_karyawan) / 100    
+                                objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseInt(ele.pemot_byr_karyawan) / 100    
+                                objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else {
                                 const pemotNama = ele.pemot_nama
 
@@ -516,18 +535,18 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * ele.pemot_byr_karyawan / 100
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
                                 } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * ele.pemot_byr_karyawan / 100
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
                                 }
                             }
 
                         } else {
-                            objDetail['debit'] = parseInt(ele.pemot_byr_karyawan)
+                            objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
                             if (ele.pemot_group == 1) {
-                                objTotal['asuransiKaryawan_ks'] += parseInt(ele.pemot_byr_karyawan)    
+                                objTotal['asuransiKaryawan_ks'] += parseFloat(ele.pemot_byr_karyawan)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['asuransiKaryawan_kt'] += parseInt(ele.pemot_byr_karyawan)
+                                objTotal['asuransiKaryawan_kt'] += parseFloat(ele.pemot_byr_karyawan)
                             } else {
                                 const pemotNama = ele.pemot_nama
                                 if (objTotal['emp'][ele.emp_number] == undefined) {
@@ -537,14 +556,14 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.pemot_byr_karyawan
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = parseFloat(ele.pemot_byr_karyawan)
                                 } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.pemot_byr_karyawan
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += parseFloat(ele.pemot_byr_karyawan)
                                 }
                             }
                         }
 
-                        if (ele.pemot_type == "%" && parseInt(ele.pemot_byr_company) != 0) {
+                        if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_company) != 0) {
                             if (ele.pemot_group == 1) {
                                 objTotal['asuransiCompany_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_company) / 100    
                             } else if (ele.pemot_group == 2) {
@@ -552,30 +571,23 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             }
                         } else {
                             if (ele.pemot_group == 1) {
-                                objTotal['asuransiCompany_ks'] += parseInt(ele.pemot_byr_company)    
+                                objTotal['asuransiCompany_ks'] += parseFloat(ele.pemot_byr_company)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['asuransiCompany_kt'] += parseInt(ele.pemot_byr_company)    
+                                objTotal['asuransiCompany_kt'] += parseFloat(ele.pemot_byr_company)    
                             }
                         }
                     }
-
-                    resObj[ele.emp_number]['gajiNett'] -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] 
-
-                    objTotal['pembulatan'] += (Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000) - resObj[ele.emp_number]['gajiNett']
-
-                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000
-                    allGaji -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                 } else {
                     const objDetail = {}
-                    if (ele.potongan_nilai != 0) {
+                    if (parseFloat(ele.potongan_nilai) != 0) {
                         if (ele.pemot_type == "%") {
-                            objDetail['debit'] = ele.ebsal_basic_salary * ele.potongan_nilai / 100   
+                            objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100   
                             
                             if (ele.pemot_group == 1) {
-                                objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * ele.potongan_nilai / 100    
+                                objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.potongan_nilai) / 100    
                                 objTotal['asuransiCompany_ks'] += 0
                             } else if (ele.pemot_group == 2) {
-                                objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * ele.potongan_nilai / 100    
+                                objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100    
                                 objTotal['asuransiCompany_kt'] += 0
                             } else {
                                 const pemotNama = ele.pemot_nama
@@ -586,9 +598,9 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * ele.potongan_nilai / 100
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100
                                 } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * ele.potongan_nilai / 100
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100
                                 }
                             }
                         } else {
@@ -620,9 +632,9 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
 
                             if (ele.pemot_group == 1) {
-                                objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseInt(ele.pemot_byr_karyawan) / 100    
+                                objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseInt(ele.pemot_byr_karyawan) / 100    
+                                objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else {
                                 const pemotNama = ele.pemot_nama
 
@@ -643,9 +655,9 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
 
                             if (ele.pemot_group == 1) {
-                                objTotal['asuransiKaryawan_ks'] += parseInt(ele.pemot_byr_karyawan)    
+                                objTotal['asuransiKaryawan_ks'] += parseFloat(ele.pemot_byr_karyawan)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['asuransiKaryawan_kt'] += parseInt(ele.pemot_byr_karyawan)    
+                                objTotal['asuransiKaryawan_kt'] += parseFloat(ele.pemot_byr_karyawan)    
                             } else {
                                 const pemotNama = ele.pemot_nama
                                 if (objTotal['emp'][ele.emp_number] == undefined) {
@@ -655,9 +667,9 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.pemot_byr_karyawan
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = parseFloat(ele.pemot_byr_karyawan)
                                 } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.pemot_byr_karyawan
+                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += parseFloat(ele.pemot_byr_karyawan)
                                 }
                             }
                         }
@@ -670,23 +682,14 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             }
                         } else {
                             if (ele.pemot_group == 1) {
-                                objTotal['asuransiCompany_ks'] += parseInt(ele.pemot_byr_company)    
+                                objTotal['asuransiCompany_ks'] += parseFloat(ele.pemot_byr_company)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['asuransiCompany_kt'] += parseInt(ele.pemot_byr_company)    
+                                objTotal['asuransiCompany_kt'] += parseFloat(ele.pemot_byr_company)    
                             }
                         }
                     }
-
-                    
-                    resObj[ele.emp_number]['gajiNett'] -= objDetail['debit']     
-                    
-                    objTotal['pembulatan'] += (Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000) - resObj[ele.emp_number]['gajiNett']
-                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000
-                    allGaji -= objDetail['debit']
                 }
             });
-
-            allGaji = Math.round(allGaji / 1000) * 1000
         } 
 
         objTotal['gajiNett'] = 0
@@ -695,13 +698,12 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             if (Object.hasOwnProperty.call(ptkpObj, key)) {
                 const ele = ptkpObj[key];
                 if (resObj[key] == undefined) {
-                    allGaji += parseInt(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan
-                    objTotal['gajiBruto'] += parseInt(ele.ebsal_basic_salary)
+                    objTotal['gajiBruto'] += parseFloat(ele.ebsal_basic_salary)
                 }
             }
         }
 
-        objTotal['gajiNett'] = allGaji
+        objTotal['gajiNett'] = objTotal['gajiBruto'] - (objTotal['asuransiKaryawan_ks'] + objTotal['asuransiKaryawan_kt'] + objTotal['pajakKaryawan'])
 
         getData.data = objTotal
 
