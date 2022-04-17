@@ -285,12 +285,16 @@ report.getPayroll =  async (req, res, next) => {
             
             dataKasbon.forEach(ele => {
                 if (resObj[ele.kasbonEmp] !== undefined) {
-                    const splitKasbonDate = ele.bayarKasDate.toISOString().slice(0, 10)
-                    const kasbonDateMonth = splitKasbonDate.split("-")[1]
-                    const kasbonDateYear = splitKasbonDate.split("-")[0]
-                    if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
-                        resObj[ele.kasbonEmp]['kasbon'].push(ele)
-                        resObj[ele.kasbonEmp]['gajiNett'] = parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseInt(ele.bayarKasJumlah)
+                    if (ele.bayarKasDate !== null) {
+                        const splitKasbonDate = ele.bayarKasDate.toISOString().slice(0, 10)
+                        const kasbonDateMonth = splitKasbonDate.split("-")[1]
+                        const kasbonDateYear = splitKasbonDate.split("-")[0]
+                        if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
+                            resObj[ele.kasbonEmp]['kasbon'].push(ele)
+                            resObj[ele.kasbonEmp]['totalPotongan'] = resObj[ele.kasbonEmp]['totalPotongan'] + parseInt(ele.bayarKasJumlah)
+                            allPemotongan += parseInt(ele.bayarKasJumlah)
+                            resObj[ele.kasbonEmp]['gajiNett'] = parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseInt(ele.bayarKasJumlah)
+                        }
                     }
                 }
             });
