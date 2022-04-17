@@ -969,9 +969,14 @@ karyawan.absenFinger = async (req, res, next) => {
 karyawan.getKasbonEmp = async (req, res, next) => {
     let data = {}
     data['database'] = req.query.database
-    data['date'] = null
+    data['month'] = null
+    
     if (req.query.date !== undefined) {
-        data['date'] = req.query.date
+        const dateKasbon = req.query.date
+        const splitDate = dateKasbon.split("-")
+
+        data['month'] = splitDate[1]
+        data['year'] = splitDate[0]
     }
 
     const getData = await kasbonModel.getAllEmp(data)

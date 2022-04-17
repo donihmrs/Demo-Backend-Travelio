@@ -10,8 +10,8 @@ kasbonModel.getAllEmp = async (data) => {
 
     let where = ""
 
-    if (data.date !== null) {
-        where = "WHERE kas.kasbon_date = '"+data.date+"'"
+    if (data.month !== null) {
+        where = "WHERE MONTH(kas.kasbon_date) = '"+data.month+"' AND YEAR(kas.kasbon_date) = '"+data.year+"';"
     }
 
     return await conn.promise().execute("SELECT kas.*, emp.emp_firstname, emp.emp_lastname FROM hs_hr_emp_kasbon AS kas LEFT JOIN hs_hr_employee AS emp ON emp.emp_number = kas.emp_number "+where)
