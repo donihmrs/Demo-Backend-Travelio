@@ -9,6 +9,7 @@ const reportModel = require(appDir+'/model/reportModel')
 const ptkpModel = require(appDir+'/model/ptkpModel')
 const tarifModel = require(appDir+'/model/tarifModel')
 const absensiModel = require(appDir+'/model/absensiModel')
+const kasbonModel = require(appDir+'/model/kasbonModel')
 
 const report = {}
 
@@ -42,6 +43,13 @@ report.getPayroll =  async (req, res, next) => {
     data['emp'] = emp
 
     const dataHoliday = await absensiModel.holiday(data)
+
+    const getKasbon = await kasbonModel.getAllRincianEmp(data)
+    let dataKasbon = {}
+
+    if (getKasbon.data.length > 0) {
+        dataKasbon = getKasbon.data
+    }
 
     const getPtkp = await reportModel.ptkp(data)
     const dataPtkp = getPtkp.data
@@ -135,20 +143,18 @@ report.getPayroll =  async (req, res, next) => {
                                     tarifMin = parseFloat(eleTarif.tarif_min) - 1
                                 }
                                 
-                                const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(ele.nilai_setahun_ptkp)) - tarifMin
-                                
+                                const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(ele.nilai_setahun_ptkp))
+
                                 if (eleTarif.tarif_group === 2 && eleTarif.tarif_type === "%") {
                                     if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_min)) {
                                         const persenPtkp = parseFloat(eleTarif.tarif_val_max)
-                                        let byrPph = (gajiKurangPtkp * persenPtkp / 100) / 12
+                                        let byrPph = ((parseFloat(gajiKurangPtkp) - tarifMin) * persenPtkp / 100) / 12
                                         
                                         let byrPphMax = 0
                                         if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_max)) {
                                             byrPphMax = ((parseFloat(eleTarif.tarif_max) - tarifMin) * persenPtkp / 100) / 12 
 
-                                            if (byrPphMax < byrPph) {
-                                                byrPph = byrPphMax
-                                            }
+                                            byrPph = byrPphMax
                                         }
 
                                         if (ptkpObj[ele.emp_number]['pajak'][eleTarif.tarif_name] === undefined) {
@@ -410,20 +416,19 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 }
                             
                                 const gajiKurangJabatan = totalGajiSetahun - byrJabatan
-                                const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(ele.nilai_setahun_ptkp)) - tarifMin
+                                const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(ele.nilai_setahun_ptkp))
                             
                                 if (eleTarif.tarif_group === 2 && eleTarif.tarif_type === "%") {
                                     if (gajiKurangPtkp >= eleTarif.tarif_min) {
                                         const persenPtkp = parseFloat(eleTarif.tarif_val_max)
-                                        let byrPph = (gajiKurangPtkp * persenPtkp / 100) / 12
-
+                                        let byrPph = ((parseFloat(gajiKurangPtkp) - tarifMin) * persenPtkp / 100) / 12
+                                        
                                         let byrPphMax = 0
+                                        
                                         if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_max)) {
                                             byrPphMax = ((parseFloat(eleTarif.tarif_max) - tarifMin) * persenPtkp / 100) / 12 
 
-                                            if (byrPphMax < byrPph) {
-                                                byrPph = byrPphMax
-                                            }
+                                            byrPph = byrPphMax
                                         }
 
                                         sumPpn += byrPph

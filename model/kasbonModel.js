@@ -27,6 +27,28 @@ kasbonModel.getAllEmp = async (data) => {
             .finally(() => conn.end())
 }
 
+kasbonModel.getAllRincianEmp = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+
+    let where = "WHERE kas.kasbon_status = 0"
+
+    if (data.bulan !== null) {
+        where = "WHERE kas.kasbon_status = 0 AND MONTH(kas.kasbon_date) = '"+data.bulan+"' AND YEAR(kas.kasbon_date) = '"+data.tahun+"';"
+    }
+
+    return await conn.promise().execute("SELECT kas.emp_number AS kasbonEmp, kas.kasbon_date AS kasbonDate, kas.kasbon_nilai AS kasbonNilai, kas.kasbon_sisa AS kasbonSisa, rincian.bayar_date AS bayarKasDate, rincian.bayar_jumlah AS bayarKasJumlah FROM hs_hr_emp_kasbon AS kas LEFT JOIN ohrm_rincian_kasbon AS rincian ON rincian.id_kasbon = kas.id_kasbon "+where)
+            .then(([rows, fields]) => {
+                console.log("Berhasil get all kasbon")
+
+                return lib.responseSuccess(rows, "Berhasil get all kasbon dari table hs_hr_emp_kasbon")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 kasbonModel.insert = async (data) => {
     const conn = await mysqlConf.conn(data.database);
     const values = [data.emp,data.date,data.nilai,data.sisa,data.status];
