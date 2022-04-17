@@ -190,6 +190,7 @@ report.getPayroll =  async (req, res, next) => {
             getData.data.forEach(ele => {
                 if (resObj[ele.emp_number] == undefined) {
                     resObj[ele.emp_number] = {}
+                    resObj[ele.emp_number]['kasbon'] = null
                     resObj[ele.emp_number]['gajiBersih'] = ele.ebsal_basic_salary
                     resObj[ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
                     resObj[ele.emp_number]['namaSalary'] = ele.salary_component
@@ -269,6 +270,8 @@ report.getPayroll =  async (req, res, next) => {
                     
                     resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett']) 
 
+                    resObj[ele.emp_number]['gajiNettStatic'] = resObj[ele.emp_number]['gajiNett']
+
                     allGaji -= objDetail['debit']
                     allPemotongan += objDetail['debit']
                     allCompany += objDetail['company']
@@ -277,6 +280,18 @@ report.getPayroll =  async (req, res, next) => {
                     objDetail['potongKeterangan'] = ele.emp_potong_keterangan
                     
                     resObj[ele.emp_number]['pemotongan'].push(objDetail)
+                }
+            });
+            
+            dataKasbon.forEach(ele => {
+                if (resObj[ele.kasbonEmp] !== undefined) {
+                    const splitKasbonDate = ele.bayarKasDate.toISOString().slice(0, 10)
+                    const kasbonDateMonth = splitKasbonDate.split("-")[1]
+                    const kasbonDateYear = splitKasbonDate.split("-")[0]
+                    if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
+                        resObj[ele.kasbonEmp]['kasbon'] = ele
+                        resObj[ele.kasbonEmp]['gajiNett'] = parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseInt(ele.bayarKasJumlah)
+                    }
                 }
             });
 

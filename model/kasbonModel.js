@@ -30,10 +30,10 @@ kasbonModel.getAllEmp = async (data) => {
 kasbonModel.getAllRincianEmp = async (data) => {
     const conn = await mysqlConf.conn(data.database);
 
-    let where = "WHERE kas.kasbon_status = 0"
+    let where = ""
 
     if (data.bulan !== null) {
-        where = "WHERE kas.kasbon_status = 0 AND MONTH(kas.kasbon_date) = '"+data.bulan+"' AND YEAR(kas.kasbon_date) = '"+data.tahun+"';"
+        where = "WHERE MONTH(kas.kasbon_date) = '"+data.bulan+"' AND YEAR(kas.kasbon_date) = '"+data.tahun+"';"
     }
 
     return await conn.promise().execute("SELECT kas.emp_number AS kasbonEmp, kas.kasbon_date AS kasbonDate, kas.kasbon_nilai AS kasbonNilai, kas.kasbon_sisa AS kasbonSisa, rincian.bayar_date AS bayarKasDate, rincian.bayar_jumlah AS bayarKasJumlah FROM hs_hr_emp_kasbon AS kas LEFT JOIN ohrm_rincian_kasbon AS rincian ON rincian.id_kasbon = kas.id_kasbon "+where)
