@@ -8,6 +8,7 @@ const bahasaModel = require(appDir+'/model/bahasaModel')
 const skillModel = require(appDir+'/model/skillModel')
 const absensiModel = require(appDir+'/model/absensiModel')
 const jobModel = require(appDir+'/model/jobModel')
+const kasbonModel = require(appDir+'/model/kasbonModel')
 
 const karyawan = {}
 
@@ -964,4 +965,122 @@ karyawan.absenFinger = async (req, res, next) => {
         res.status(500).send(Err)
     }
 }
+
+karyawan.getKasbonEmp = async (req, res, next) => {
+    let data = {}
+    data['database'] = req.query.database
+    data['date'] = null
+    if (req.query.date !== undefined) {
+        data['date'] = req.query.date
+    }
+
+    const getData = await kasbonModel.getAllEmp(data)
+    if (getData.status == 200) {
+        res.status(200).send(getData)
+    } else {
+        res.status(400).send(getData)
+    }
+}
+
+karyawan.addKasbon = async (req, res, next) => {
+    try {
+        const getTglKasbon = req.body.tglKasbon
+
+        let tglKasbon = "0000-00-00";
+        
+        if (getTglKasbon.year !== undefined) {
+            tglKasbon = getTglKasbon.year +'-'+ lib.dateMonth(getTglKasbon.month) +'-'+ lib.dateDay(getTglKasbon.day)
+        }
+ 
+        let data = {}
+        data['database'] = req.body.database
+        data['emp'] = req.body.emp
+        data['date'] = tglKasbon
+        data['nilai'] = req.body.nilai
+        data['sisa'] = req.body.sisa
+        data['status'] = req.body.status
+
+        const insert = await kasbonModel.insert(data)
+        
+        if (insert.status == 200) {
+            res.status(200).send(insert)
+        } else {
+            res.status(400).send(insert)
+        }
+    } catch(e) {
+        res.status(500).send(e)
+    }
+}
+
+karyawan.delKasbonEmp =  async (req, res, next) => {
+    let data = {} 
+    data['database'] = req.body.database
+    data['id'] = req.body.idKasbon
+
+    const getData = await kasbonModel.delete(data)
+
+    if (getData.status == 200) {
+        res.status(200).send(getData)
+    } else {
+        res.status(400).send(getData)
+    }
+}
+
+karyawan.addCicilanKasbon = async (req, res, next) => {
+    try {
+        const getTglCicilan = req.body.tglCicilan
+
+        let tglCicilan = "0000-00-00";
+        
+        if (getTglCicilan.year !== undefined) {
+            tglCicilan = getTglCicilan.year +'-'+ lib.dateMonth(getTglCicilan.month) +'-'+ lib.dateDay(getTglCicilan.day)
+        }
+ 
+        let data = {}
+        data['database'] = req.body.database
+        data['id'] = req.body.id
+        data['date'] = tglCicilan
+        data['nilai'] = req.body.nilai
+        
+        const getSisaKasbon = await kasbonModel.getSisaKasbon(data)
+        
+        if (getSisaKasbon.status === 200) { 
+            data['status'] = 0
+            const sisaKasbon = parseInt(getSisaKasbon.data) - parseInt(req.body.nilai)
+
+            data['sisaKasbon'] = sisaKasbon
+
+            if (sisaKasbon === 0) {
+                data['status'] = 1
+            }
+
+            const insert = await kasbonModel.insertCicilan(data)
+        
+            if (insert.status == 200) {
+                await kasbonModel.updateSisaKasbon(data)
+                res.status(200).send(insert)
+            } else {
+                res.status(400).send(insert)
+            }
+        } else {
+            res.status(400).send(getSisaKasbon)
+        }
+    } catch(e) {
+        res.status(500).send(e)
+    }
+}
+
+karyawan.getCicilanKasbonById = async (req, res, next) => {
+    let data = {}
+    data['database'] = req.query.database
+    data['id'] = req.query.id
+
+    const getData = await kasbonModel.getCicilanById(data)
+    if (getData.status == 200) {
+        res.status(200).send(getData)
+    } else {
+        res.status(400).send(getData)
+    }
+}
+
 module.exports = karyawan;

@@ -37,5 +37,24 @@ router.post('/absenFinger', function(req, res, next) {
     karyawan.absenFinger(req,res,next)
 });
 
+router.get('/getKasbonEmp', function(req, res, next) {
+    karyawan.getKasbonEmp(req,res,next)
+});
+
+router.post('/addKasbon', function(req, res, next) {
+    karyawan.addKasbon(req,res,next)
+});
+
+router.post('/delKasbonEmp', function(req, res, next) {
+    karyawan.delKasbonEmp(req,res,next)
+});
+
+router.post('/addCicilanKasbon', function(req, res, next) {
+    karyawan.addCicilanKasbon(req,res,next)
+});
+
+router.get('/getCicilanKasbonById', function(req, res, next) {
+    karyawan.getCicilanKasbonById(req,res,next)
+});
 
 module.exports = router;
