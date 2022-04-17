@@ -190,7 +190,7 @@ report.getPayroll =  async (req, res, next) => {
             getData.data.forEach(ele => {
                 if (resObj[ele.emp_number] == undefined) {
                     resObj[ele.emp_number] = {}
-                    resObj[ele.emp_number]['kasbon'] = null
+                    resObj[ele.emp_number]['kasbon'] = []
                     resObj[ele.emp_number]['gajiBersih'] = ele.ebsal_basic_salary
                     resObj[ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
                     resObj[ele.emp_number]['namaSalary'] = ele.salary_component
@@ -289,7 +289,7 @@ report.getPayroll =  async (req, res, next) => {
                     const kasbonDateMonth = splitKasbonDate.split("-")[1]
                     const kasbonDateYear = splitKasbonDate.split("-")[0]
                     if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
-                        resObj[ele.kasbonEmp]['kasbon'] = ele
+                        resObj[ele.kasbonEmp]['kasbon'].push(ele)
                         resObj[ele.kasbonEmp]['gajiNett'] = parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseInt(ele.bayarKasJumlah)
                     }
                 }
