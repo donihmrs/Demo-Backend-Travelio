@@ -1088,4 +1088,39 @@ karyawan.getCicilanKasbonById = async (req, res, next) => {
     }
 }
 
+karyawan.delCicilanKasbonById = async (req, res, next) => {
+    try {
+        let data = {}
+        data['database'] = req.body.database
+        data['id'] = req.body.id
+        data['sisa'] = parseFloat(req.body.sisa)
+        
+        const getSisaKasbon = await kasbonModel.getCicilanKasbonById(data)
+        
+        if (getSisaKasbon.status === 200) { 
+            data['status'] = 0
+            const tambahKasbon = parseInt(getSisaKasbon.data.bayar_jumlah) + data['sisa']
+
+            data['tambahKasbon'] = tambahKasbon
+            const idKasbon = getSisaKasbon.data.id_kasbon
+
+            data['idKasbon'] = idKasbon
+        
+            const updateData = await kasbonModel.updateTambahKasbon(data)
+
+            if (updateData.status == 200) {
+                await kasbonModel.deleteRincian(data)
+                res.status(200).send(updateData)
+            } else {
+                res.status(400).send(updateData)
+            }
+
+        } else {
+            res.status(400).send(getSisaKasbon)
+        }
+    } catch(e) {
+        res.status(500).send(e)
+    }
+}
+
 module.exports = karyawan;
