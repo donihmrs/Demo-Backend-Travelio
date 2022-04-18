@@ -681,6 +681,16 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                     ele.bayarKasDate = lib.formatDateDb(ele.bayarKasDate)
                     ele.kasbonNilai = 0
                     ele['kasbonDate'] = null
+                    if (ele.emp_middle_name !== "" && ele.emp_lastname !== "") {
+                        ele['namaKaryawan'] = ele.emp_firstname
+                    } else if (ele.emp_middle_name !== "") {
+                        ele['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                    } else {
+                        ele['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_lastname
+                    }
+                    delete ele.emp_firstname
+                    delete ele.emp_middle_name
+                    delete ele.emp_lastname
 
                     empKasbonTemp.push(ele.kasbonEmp)
                     
@@ -703,6 +713,15 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                 if (!empKasbonTemp.includes(ele.emp_number)) {
                     let objKasbon = {}
                     objKasbon['kasbonEmp'] = ele.emp_number
+                    
+                    if (ele.emp_middle_name !== "" && ele.emp_lastname !== "") {
+                        objKasbon['namaKaryawan'] = ele.emp_firstname
+                    } else if (ele.emp_middle_name !== "") {
+                        objKasbon['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                    } else {
+                        objKasbon['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_lastname
+                    }
+
                     objKasbon['kasbonNilai'] = ele.kasbon_nilai
                     objKasbon['kasbonSisa'] = 0
                     objKasbon['kasbonDate'] = lib.formatDateDb(ele.kasbon_date)

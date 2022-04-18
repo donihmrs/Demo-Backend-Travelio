@@ -36,7 +36,7 @@ kasbonModel.getAllKasbonReport = async (data) => {
         where = "WHERE kas.kasbon_status = 0 AND MONTH(kas.kasbon_date) = '"+data.bulan+"' AND YEAR(kas.kasbon_date) = '"+data.tahun+"';"
     }
 
-    return await conn.promise().execute("SELECT kas.*, emp.emp_firstname, emp.emp_lastname FROM hs_hr_emp_kasbon AS kas LEFT JOIN hs_hr_employee AS emp ON emp.emp_number = kas.emp_number "+where)
+    return await conn.promise().execute("SELECT kas.*, emp.emp_firstname,emp.emp_middle_name, emp.emp_lastname FROM hs_hr_emp_kasbon AS kas LEFT JOIN hs_hr_employee AS emp ON emp.emp_number = kas.emp_number "+where)
             .then(([rows, fields]) => {
                 console.log("Berhasil get all kasbon")
 
@@ -58,7 +58,8 @@ kasbonModel.getAllRincianEmp = async (data) => {
         where = "WHERE MONTH(rincian.bayar_date) = '"+data.bulan+"' AND YEAR(rincian.bayar_date) = '"+data.tahun+"';"
     }
 
-    return await conn.promise().execute("SELECT kas.emp_number AS kasbonEmp, kas.kasbon_date AS kasbonDate, kas.kasbon_nilai AS kasbonNilai, kas.kasbon_sisa AS kasbonSisa, rincian.bayar_date AS bayarKasDate, rincian.bayar_jumlah AS bayarKasJumlah FROM hs_hr_emp_kasbon AS kas LEFT JOIN ohrm_rincian_kasbon AS rincian ON rincian.id_kasbon = kas.id_kasbon "+where)
+    return await conn.promise().execute("SELECT emp.emp_firstname,emp.emp_middle_name, emp.emp_lastname, kas.emp_number AS kasbonEmp, kas.kasbon_date AS kasbonDate, kas.kasbon_nilai AS kasbonNilai, kas.kasbon_sisa AS kasbonSisa, rincian.bayar_date AS bayarKasDate, rincian.bayar_jumlah AS bayarKasJumlah FROM hs_hr_emp_kasbon AS kas " +
+    " LEFT JOIN ohrm_rincian_kasbon AS rincian ON rincian.id_kasbon = kas.id_kasbon LEFT JOIN hs_hr_employee AS emp ON emp.emp_number = kas.emp_number "+where)
             .then(([rows, fields]) => {
                 console.log("Berhasil get all kasbon")
 
