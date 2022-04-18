@@ -463,7 +463,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         objTotal['pajakKaryawan'] = 0
         objTotal['pajakCompany'] = 0
         objTotal['pembulatan'] = 0
-        objTotal['totalKasbon'] = 0
+        objTotal['totalBayarKasbon'] = 0
         objTotal['emp'] = {}
 
         //Hitung pajak
@@ -669,6 +669,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         } 
 
         objTotal['emp']['kasbon'] = []
+        let empKasbonTemp = []
 
         dataKasbon.forEach(ele => {
             if (ele.bayarKasDate !== null) {               
@@ -677,12 +678,41 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                 const kasbonDateYear = splitKasbonDate.split("-")[0]
                 if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
                     delete ele.kasbonDate;
-                    delete ele.bayarKasDate;
+                    ele.bayarKasDate = lib.formatDateDb(ele.bayarKasDate)
+                    ele.kasbonNilai = 0
+                    ele['kasbonDate'] = null
+
+                    empKasbonTemp.push(ele.kasbonEmp)
+                    
                     objTotal['emp']['kasbon'].push(ele)
-                    objTotal['totalKasbon'] += parseFloat(ele.bayarKasJumlah)
+                    objTotal['totalBayarKasbon'] += parseFloat(ele.bayarKasJumlah)
                 }
             }
         });
+
+        const getKasbonAwal = await kasbonModel.getAllKasbonReport(data)
+        let dataKasbonAwal = []
+
+        if (getKasbonAwal.data.length > 0) {
+            dataKasbonAwal = getKasbonAwal.data
+        }
+
+        for (const key in dataKasbonAwal) {
+            if (Object.hasOwnProperty.call(dataKasbonAwal, key)) {
+                const ele = dataKasbonAwal[key];
+                if (!empKasbonTemp.includes(ele.emp_number)) {
+                    let objKasbon = {}
+                    objKasbon['kasbonEmp'] = ele.emp_number
+                    objKasbon['kasbonNilai'] = ele.kasbon_nilai
+                    objKasbon['kasbonSisa'] = 0
+                    objKasbon['kasbonDate'] = lib.formatDateDb(ele.kasbon_date)
+                    objKasbon['bayarKasDate'] = null
+                    objKasbon['bayarKasJumlah'] = 0
+
+                    objTotal['emp']['kasbon'].push(objKasbon)
+                }
+            }
+        }
 
         objTotal['gajiNett'] = 0
         
@@ -695,7 +725,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             }
         }
 
-        objTotal['gajiNett'] = objTotal['gajiBruto'] - (objTotal['asuransiKaryawan_ks'] + objTotal['asuransiKaryawan_kt'] + objTotal['pajakKaryawan'] + objTotal['totalKasbon'])
+        objTotal['gajiNett'] = objTotal['gajiBruto'] - (objTotal['asuransiKaryawan_ks'] + objTotal['asuransiKaryawan_kt'] + objTotal['pajakKaryawan'] + objTotal['totalBayarKasbon'])
 
         getData.data = objTotal
 

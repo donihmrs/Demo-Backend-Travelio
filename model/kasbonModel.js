@@ -27,6 +27,28 @@ kasbonModel.getAllEmp = async (data) => {
             .finally(() => conn.end())
 }
 
+kasbonModel.getAllKasbonReport = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+
+    let where = "WHERE kas.kasbon_status = 0";
+
+    if (data.month !== null) {
+        where = "WHERE kas.kasbon_status = 0 AND MONTH(kas.kasbon_date) = '"+data.bulan+"' AND YEAR(kas.kasbon_date) = '"+data.tahun+"';"
+    }
+
+    return await conn.promise().execute("SELECT kas.*, emp.emp_firstname, emp.emp_lastname FROM hs_hr_emp_kasbon AS kas LEFT JOIN hs_hr_employee AS emp ON emp.emp_number = kas.emp_number "+where)
+            .then(([rows, fields]) => {
+                console.log("Berhasil get all kasbon")
+
+                return lib.responseSuccess(rows, "Berhasil get all kasbon dari table hs_hr_emp_kasbon")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 kasbonModel.getAllRincianEmp = async (data) => {
     const conn = await mysqlConf.conn(data.database);
 
