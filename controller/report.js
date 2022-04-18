@@ -45,7 +45,7 @@ report.getPayroll =  async (req, res, next) => {
     const dataHoliday = await absensiModel.holiday(data)
 
     const getKasbon = await kasbonModel.getAllRincianEmp(data)
-    let dataKasbon = {}
+    let dataKasbon = []
 
     if (getKasbon.data.length > 0) {
         dataKasbon = getKasbon.data
@@ -182,12 +182,12 @@ report.getPayroll =  async (req, res, next) => {
         const getData = await reportModel.payroll(data)
         let resObj = {}
 
-        if (getData.status == 200 && getData.data.length > 0) {
-            let allGaji = 0
-            let allPemotongan = 0
-            let allCompany = 0
+        let allGaji = 0
+        let allPemotongan = 0
+        let allCompany = 0
 
-            getData.data.forEach(ele => {
+        if (getData.status == 200 && getData.data.length > 0) {
+            await getData.data.forEach(ele => {
                 if (resObj[ele.emp_number] == undefined) {
                     resObj[ele.emp_number] = {}
                     resObj[ele.emp_number]['kasbon'] = []
@@ -198,6 +198,7 @@ report.getPayroll =  async (req, res, next) => {
 
                     resObj[ele.emp_number]['totalPotongan'] = 0
                     resObj[ele.emp_number]['companyPotongan'] = 0
+                    resObj[ele.emp_number]['pembulatan'] = 0
                     resObj[ele.emp_number]['gajiNett'] = parseFloat(ele.ebsal_basic_salary)
 
                     allGaji += parseFloat(ele.ebsal_basic_salary)
@@ -268,8 +269,15 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['gajiNett'] -= objDetail['debit']
                     resObj[ele.emp_number]['companyPotongan'] += objDetail['company']
                     
-                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett']) 
+                    const pembulatanGaji = Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000 
+                    const gajiTanpaPembulatan = Math.round(resObj[ele.emp_number]['gajiNett'])
 
+                    resObj[ele.emp_number]['gajiNett'] = pembulatanGaji
+                    
+                    if (resObj[ele.emp_number]['pembulatan'] === 0) {
+                        resObj[ele.emp_number]['pembulatan'] = pembulatanGaji  - gajiTanpaPembulatan
+                    }
+                    
                     resObj[ele.emp_number]['gajiNettStatic'] = resObj[ele.emp_number]['gajiNett']
 
                     allGaji -= objDetail['debit']
@@ -282,28 +290,35 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['pemotongan'].push(objDetail)
                 }
             });
-            
-            dataKasbon.forEach(ele => {
-                if (resObj[ele.kasbonEmp] !== undefined) {
-                    if (ele.bayarKasDate !== null) {
-                        const splitKasbonDate = ele.bayarKasDate.toISOString().slice(0, 10)
-                        const kasbonDateMonth = splitKasbonDate.split("-")[1]
-                        const kasbonDateYear = splitKasbonDate.split("-")[0]
-                        if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
-                            resObj[ele.kasbonEmp]['kasbon'].push(ele)
-                            resObj[ele.kasbonEmp]['totalPotongan'] = resObj[ele.kasbonEmp]['totalPotongan'] + parseInt(ele.bayarKasJumlah)
-                            allPemotongan += parseInt(ele.bayarKasJumlah)
-                            resObj[ele.kasbonEmp]['gajiNett'] = parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseInt(ele.bayarKasJumlah)
-                        }
+        } 
+
+        await dataKasbon.forEach(ele => {
+            if (resObj[ele.kasbonEmp] !== undefined) {
+                if (ele.bayarKasDate !== null) {
+                    const splitKasbonDate = lib.formatDateDb(ele.bayarKasDate)
+                    const kasbonDateMonth = splitKasbonDate.split("-")[1]
+                    const kasbonDateYear = splitKasbonDate.split("-")[0]
+                    if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
+                        resObj[ele.kasbonEmp]['kasbon'].push(ele)
+                        resObj[ele.kasbonEmp]['totalPotongan'] = resObj[ele.kasbonEmp]['totalPotongan'] + parseInt(ele.bayarKasJumlah)
+                        allPemotongan += parseInt(ele.bayarKasJumlah)
+                        allGaji -= parseInt(ele.bayarKasJumlah)
+                        resObj[ele.kasbonEmp]['gajiNett'] =  Math.round(parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseInt(ele.bayarKasJumlah))
                     }
                 }
-            });
+            }
+        });
 
-            resObj['allGaji'] = Math.round(allGaji)
-            resObj['allPemotongan'] = allPemotongan
-            resObj['allCompany'] = allCompany
-        } 
-        
+        const pembulatanAllGaji =  Math.round(allGaji / 1000) * 1000
+        const pembulatanTanpaAllGaji =  Math.round(allGaji)
+
+        resObj['allGaji'] = {}
+
+        resObj['allGaji']['nett'] = Math.round(allGaji / 1000) * 1000
+        resObj['allGaji']['pembulatan'] = pembulatanAllGaji - pembulatanTanpaAllGaji
+        resObj['allPemotongan'] = allPemotongan
+        resObj['allCompany'] = allCompany
+
         for (const key in ptkpObj) {
             if (Object.hasOwnProperty.call(ptkpObj, key)) {
                 const ele = ptkpObj[key];
@@ -364,6 +379,13 @@ report.getPayrollForJurnal =  async (req, res, next) => {
     }
 
     const dataTarif = getTarif.data
+
+    const getKasbon = await kasbonModel.getAllRincianEmp(data)
+    let dataKasbon = []
+
+    if (getKasbon.data.length > 0) {
+        dataKasbon = getKasbon.data
+    }
     
     if (getPtkp.status != 200 && getPtkp.data.length == 0) {
         res.status(400).send(getPtkp)
@@ -406,6 +428,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         objTotal['pajakKaryawan'] = 0
         objTotal['pajakCompany'] = 0
         objTotal['pembulatan'] = 0
+        objTotal['totalKasbon'] = 0
         objTotal['emp'] = {}
 
         //Hitung pajak
@@ -509,6 +532,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -532,6 +556,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -540,7 +565,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.potongan_nilai
                                 }
                             }
-                        } 
+                        }
                     } else {
                         if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_karyawan) != 0) {
                             objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
@@ -556,6 +581,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -577,6 +603,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -619,6 +646,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -642,6 +670,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -666,6 +695,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -688,6 +718,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                     objTotal['emp'][ele.emp_number] = {}
                                     objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
                                     objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
                                 }
 
                                 if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
@@ -715,6 +746,19 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                 }
             });
         } 
+
+        dataKasbon.forEach(ele => {
+            if (resObj[ele.kasbonEmp] !== undefined) {
+                if (ele.bayarKasDate !== null) {
+                    const splitKasbonDate = lib.formatDateDb(ele.bayarKasDate)
+                    const kasbonDateMonth = splitKasbonDate.split("-")[1]
+                    const kasbonDateYear = splitKasbonDate.split("-")[0]
+                    if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
+                        objTotal['emp'][ele.kasbonEmp]['kasbon']
+                    }
+                }
+            }
+        });
 
         objTotal['gajiNett'] = 0
         

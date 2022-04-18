@@ -33,7 +33,7 @@ kasbonModel.getAllRincianEmp = async (data) => {
     let where = ""
 
     if (data.bulan !== null) {
-        where = "WHERE MONTH(kas.kasbon_date) = '"+data.bulan+"' AND YEAR(kas.kasbon_date) = '"+data.tahun+"';"
+        where = "WHERE MONTH(rincian.bayar_date) = '"+data.bulan+"' AND YEAR(rincian.bayar_date) = '"+data.tahun+"';"
     }
 
     return await conn.promise().execute("SELECT kas.emp_number AS kasbonEmp, kas.kasbon_date AS kasbonDate, kas.kasbon_nilai AS kasbonNilai, kas.kasbon_sisa AS kasbonSisa, rincian.bayar_date AS bayarKasDate, rincian.bayar_jumlah AS bayarKasJumlah FROM hs_hr_emp_kasbon AS kas LEFT JOIN ohrm_rincian_kasbon AS rincian ON rincian.id_kasbon = kas.id_kasbon "+where)
