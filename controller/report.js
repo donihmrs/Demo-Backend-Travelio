@@ -185,9 +185,12 @@ report.getPayroll =  async (req, res, next) => {
         let allGaji = 0
         let allPemotongan = 0
         let allCompany = 0
+        let flagNotPotong = 0
 
         if (getData.status == 200 && getData.data.length > 0) {
             await getData.data.forEach(ele => {
+                flagNotPotong = 0
+
                 if (resObj[ele.emp_number] == undefined) {
                     resObj[ele.emp_number] = {}
                     resObj[ele.emp_number]['kasbon'] = []
@@ -200,6 +203,7 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['companyPotongan'] = 0
                     resObj[ele.emp_number]['pembulatan'] = 0
                     resObj[ele.emp_number]['gajiNett'] = parseFloat(ele.ebsal_basic_salary)
+                    resObj[ele.emp_number]['gajiNettStatic'] = parseFloat(ele.ebsal_basic_salary)
 
                     allGaji += parseFloat(ele.ebsal_basic_salary)
 
@@ -230,9 +234,17 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['totalPotongan'] += objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                     resObj[ele.emp_number]['gajiNett'] -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                     resObj[ele.emp_number]['companyPotongan'] += objDetail['company'] + ptkpObj[ele.emp_number]['pajak']['pph21Company']
+                    resObj[ele.emp_number]['gajiNettStatic'] -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                     
-                    resObj[ele.emp_number]['gajiNett'] = Math.round(resObj[ele.emp_number]['gajiNett'])
+                    const pembulatanGaji = Math.round(resObj[ele.emp_number]['gajiNettStatic'] / 1000) * 1000 
+                    const gajiTanpaPembulatan = Math.round(resObj[ele.emp_number]['gajiNettStatic'])
+
+                    resObj[ele.emp_number]['gajiNett'] = pembulatanGaji
                     
+                    if (resObj[ele.emp_number]['pembulatan'] === 0) {
+                        resObj[ele.emp_number]['pembulatan'] = pembulatanGaji  - gajiTanpaPembulatan
+                    }
+
                     allGaji -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                     allPemotongan += objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
                     allCompany += objDetail['company'] + ptkpObj[ele.emp_number]['pajak']['pph21Company']
@@ -268,17 +280,15 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['totalPotongan'] += objDetail['debit']
                     resObj[ele.emp_number]['gajiNett'] -= objDetail['debit']
                     resObj[ele.emp_number]['companyPotongan'] += objDetail['company']
+
+                    resObj[ele.emp_number]['gajiNettStatic'] -= objDetail['debit']
                     
-                    const pembulatanGaji = Math.round(resObj[ele.emp_number]['gajiNett'] / 1000) * 1000 
-                    const gajiTanpaPembulatan = Math.round(resObj[ele.emp_number]['gajiNett'])
+                    const pembulatanGaji = Math.round(resObj[ele.emp_number]['gajiNettStatic'] / 1000) * 1000 
+                    const gajiTanpaPembulatan = Math.round(resObj[ele.emp_number]['gajiNettStatic'])
 
                     resObj[ele.emp_number]['gajiNett'] = pembulatanGaji
                     
-                    if (resObj[ele.emp_number]['pembulatan'] === 0) {
-                        resObj[ele.emp_number]['pembulatan'] = pembulatanGaji  - gajiTanpaPembulatan
-                    }
-                    
-                    resObj[ele.emp_number]['gajiNettStatic'] = resObj[ele.emp_number]['gajiNett']
+                    resObj[ele.emp_number]['pembulatan'] = pembulatanGaji  - gajiTanpaPembulatan
 
                     allGaji -= objDetail['debit']
                     allPemotongan += objDetail['debit']
@@ -292,6 +302,7 @@ report.getPayroll =  async (req, res, next) => {
             });
         } 
 
+
         await dataKasbon.forEach(ele => {
             if (resObj[ele.kasbonEmp] !== undefined) {
                 if (ele.bayarKasDate !== null) {
@@ -299,23 +310,22 @@ report.getPayroll =  async (req, res, next) => {
                     const kasbonDateMonth = splitKasbonDate.split("-")[1]
                     const kasbonDateYear = splitKasbonDate.split("-")[0]
                     if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
+                        flagNotPotong = 0
+
                         resObj[ele.kasbonEmp]['kasbon'].push(ele)
-                        resObj[ele.kasbonEmp]['totalPotongan'] = resObj[ele.kasbonEmp]['totalPotongan'] + parseInt(ele.bayarKasJumlah)
-                        allPemotongan += parseInt(ele.bayarKasJumlah)
-                        allGaji -= parseInt(ele.bayarKasJumlah)
-                        resObj[ele.kasbonEmp]['gajiNett'] =  Math.round(parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseInt(ele.bayarKasJumlah))
+                        resObj[ele.kasbonEmp]['totalPotongan'] = resObj[ele.kasbonEmp]['totalPotongan'] + parseFloat(ele.bayarKasJumlah)
+                        allPemotongan += parseFloat(ele.bayarKasJumlah)
+                        allGaji -= parseFloat(ele.bayarKasJumlah)
+                        resObj[ele.kasbonEmp]['gajiNett'] =  Math.round((parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseFloat(ele.bayarKasJumlah)) / 1000) * 1000
                     }
                 }
             }
         });
 
-        const pembulatanAllGaji =  Math.round(allGaji / 1000) * 1000
-        const pembulatanTanpaAllGaji =  Math.round(allGaji)
-
         resObj['allGaji'] = {}
 
-        resObj['allGaji']['nett'] = Math.round(allGaji / 1000) * 1000
-        resObj['allGaji']['pembulatan'] = pembulatanAllGaji - pembulatanTanpaAllGaji
+        resObj['allGaji']['nett'] = Math.round(allGaji)
+
         resObj['allPemotongan'] = allPemotongan
         resObj['allCompany'] = allCompany
 
@@ -331,10 +341,23 @@ report.getPayroll =  async (req, res, next) => {
 
                     resObj[key]['totalPotongan'] = ele.pajak.pph21Karyawan
                     resObj[key]['companyPotongan'] = ele.pajak.pph21Company
-                    resObj[key]['gajiNett'] = parseFloat(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan
+
+                    if (resObj['allGaji']['nett'] === 0) {
+                        flagNotPotong = 1
+                        resObj['allGaji']['pembulatan'] = 0
+                    }
+                    
+                    const pembulatanGaji = Math.round((parseFloat(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan) / 1000) * 1000
+                    const tanpaPembulatanGaji = Math.round(parseFloat(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan)
+
+                    resObj[key]['gajiNett'] = pembulatanGaji
+                    resObj[key]['gajiNettStatic'] = tanpaPembulatanGaji
+                    resObj[key]['pembulatan'] = pembulatanGaji - tanpaPembulatanGaji
                     resObj[key]['pajak'] = ele.pajak
 
-                    resObj['allGaji'] += resObj[key]['gajiNett']
+                    resObj['allGaji']['nett'] += parseFloat(resObj[key]['gajiNett'])
+                    resObj['allGaji']['pembulatan'] += parseFloat(tanpaPembulatanGaji)
+                    
                     resObj['allPemotongan'] += ele.pajak.pph21Karyawan
                     resObj['allCompany'] += ele.pajak.pph21Company
                 } else {
@@ -342,6 +365,18 @@ report.getPayroll =  async (req, res, next) => {
                 }
             }
         }
+
+        const pembulatanAllGaji =  Math.round(resObj['allGaji']['nett'] / 1000) * 1000
+
+        let pembulatanTanpaAllGaji =  Math.round(resObj['allGaji']['nett'])
+
+        if (flagNotPotong === 1) {
+            flagNotPotong = 0
+            pembulatanTanpaAllGaji = Math.round(resObj['allGaji']['pembulatan'])
+        }
+
+        resObj['allGaji']['nett'] = pembulatanAllGaji
+        resObj['allGaji']['pembulatan'] = pembulatanAllGaji - pembulatanTanpaAllGaji
 
         getData.data = resObj
 
@@ -526,21 +561,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * ele.potongan_nilai / 100    
                                 objTotal['asuransiCompany_kt'] += 0
-                            } else {
-                                const pemotNama = ele.pemot_nama
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * ele.potongan_nilai / 100
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * ele.potongan_nilai / 100
-                                }
-                            }
+                            } 
                         } else {
                             objDetail['debit'] = ele.potongan_nilai;
 
@@ -550,21 +571,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += ele.potongan_nilai    
                                 objTotal['asuransiCompany_kt'] += 0
-                            } else {
-                                const pemotNama = ele.pemot_nama
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.potongan_nilai
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.potongan_nilai
-                                }
-                            }
+                            } 
                         }
                     } else {
                         if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_karyawan) != 0) {
@@ -574,22 +581,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
-                            } else {
-                                const pemotNama = ele.pemot_nama
-
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
-                                }
-                            }
+                            } 
 
                         } else {
                             objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
@@ -597,21 +589,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 objTotal['asuransiKaryawan_ks'] += parseFloat(ele.pemot_byr_karyawan)    
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += parseFloat(ele.pemot_byr_karyawan)
-                            } else {
-                                const pemotNama = ele.pemot_nama
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = parseFloat(ele.pemot_byr_karyawan)
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += parseFloat(ele.pemot_byr_karyawan)
-                                }
-                            }
+                            } 
                         }
 
                         if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_company) != 0) {
@@ -640,21 +618,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100    
                                 objTotal['asuransiCompany_kt'] += 0
-                            } else {
-                                const pemotNama = ele.pemot_nama
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100
-                                }
-                            }
+                            } 
                         } else {
                             objDetail['debit'] = ele.potongan_nilai;
 
@@ -664,21 +628,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += ele.potongan_nilai  
                                 objTotal['asuransiCompany_kt'] += 0
-                            } else {
-                                const pemotNama = ele.pemot_nama
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.potongan_nilai
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.potongan_nilai
-                                }
-                            }
+                            } 
                         }
                     } else {
                         if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_karyawan) != 0) {
@@ -688,22 +638,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 objTotal['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
-                            } else {
-                                const pemotNama = ele.pemot_nama
-
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = ele.ebsal_basic_salary * ele.pemot_byr_karyawan / 100
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += ele.ebsal_basic_salary * ele.pemot_byr_karyawan / 100
-                                }
-                            }
+                            } 
 
                         } else {
                             objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
@@ -712,20 +647,6 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                                 objTotal['asuransiKaryawan_ks'] += parseFloat(ele.pemot_byr_karyawan)    
                             } else if (ele.pemot_group == 2) {
                                 objTotal['asuransiKaryawan_kt'] += parseFloat(ele.pemot_byr_karyawan)    
-                            } else {
-                                const pemotNama = ele.pemot_nama
-                                if (objTotal['emp'][ele.emp_number] == undefined) {
-                                    objTotal['emp'][ele.emp_number] = {}
-                                    objTotal['emp'][ele.emp_number]['id'] = ele.employee_id
-                                    objTotal['emp'][ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
-                                    objTotal['emp'][ele.emp_number]['kasbon'] = {}
-                                }
-
-                                if (objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] == undefined) {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] = parseFloat(ele.pemot_byr_karyawan)
-                                } else {
-                                    objTotal['emp'][ele.emp_number][pemotNama.replace(/ /g,"_")] += parseFloat(ele.pemot_byr_karyawan)
-                                }
                             }
                         }
 
@@ -747,15 +668,18 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             });
         } 
 
+        objTotal['emp']['kasbon'] = []
+
         dataKasbon.forEach(ele => {
-            if (resObj[ele.kasbonEmp] !== undefined) {
-                if (ele.bayarKasDate !== null) {
-                    const splitKasbonDate = lib.formatDateDb(ele.bayarKasDate)
-                    const kasbonDateMonth = splitKasbonDate.split("-")[1]
-                    const kasbonDateYear = splitKasbonDate.split("-")[0]
-                    if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
-                        objTotal['emp'][ele.kasbonEmp]['kasbon']
-                    }
+            if (ele.bayarKasDate !== null) {               
+                const splitKasbonDate = lib.formatDateDb(ele.bayarKasDate)
+                const kasbonDateMonth = splitKasbonDate.split("-")[1]
+                const kasbonDateYear = splitKasbonDate.split("-")[0]
+                if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
+                    delete ele.kasbonDate;
+                    delete ele.bayarKasDate;
+                    objTotal['emp']['kasbon'].push(ele)
+                    objTotal['totalKasbon'] += parseFloat(ele.bayarKasJumlah)
                 }
             }
         });
@@ -771,7 +695,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             }
         }
 
-        objTotal['gajiNett'] = objTotal['gajiBruto'] - (objTotal['asuransiKaryawan_ks'] + objTotal['asuransiKaryawan_kt'] + objTotal['pajakKaryawan'])
+        objTotal['gajiNett'] = objTotal['gajiBruto'] - (objTotal['asuransiKaryawan_ks'] + objTotal['asuransiKaryawan_kt'] + objTotal['pajakKaryawan'] + objTotal['totalKasbon'])
 
         getData.data = objTotal
 
