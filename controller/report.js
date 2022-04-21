@@ -466,6 +466,17 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         objTotal['totalBayarKasbon'] = 0
         objTotal['emp'] = {}
 
+        objTotal['keterangan'] = {}
+        objTotal['keterangan']['asuransiKaryawan_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Karyawan"
+        objTotal['keterangan']['asuransiKaryawan_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Karyawan"
+        objTotal['keterangan']['asuransiCompany_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Perusahaan"
+        objTotal['keterangan']['asuransiCompany_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Perusahaan"
+        objTotal['keterangan']['pajakKaryawan'] = "Total Biaya Pajak Yang Ditanggung Karyawan"
+        objTotal['keterangan']['pajakCompany'] = "Total Biaya Pajak Yang Ditanggung Perusahaan"
+        objTotal['keterangan']['pembulatan'] = "Total Pembulatan"
+        objTotal['keterangan']['totalBayarKasbon'] = "Total Pembayaran Kasbon dari keseluruhan Karyawan"
+        objTotal['keterangan']['emp'] = "Berisikan Biaya-biaya per karyawan, seperti Kasbon"
+
         //Hitung pajak
         for (const key in dataPtkp) {
             if (Object.hasOwnProperty.call(dataPtkp, key)) {
@@ -744,7 +755,24 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             }
         }
 
-        objTotal['gajiNett'] = objTotal['gajiBruto'] - (objTotal['asuransiKaryawan_ks'] + objTotal['asuransiKaryawan_kt'] + objTotal['pajakKaryawan'] + objTotal['totalBayarKasbon'])
+        const pembAsuransiKaryawan_ks = Math.round(objTotal['asuransiKaryawan_ks'] / 1000) * 1000
+        const pembAsuransiCompany_ks = Math.round(objTotal['asuransiCompany_ks'] / 1000) * 1000
+        const pembAsuransiKaryawan_kt = Math.round(objTotal['asuransiKaryawan_kt'] / 1000) * 1000
+        const pembAsuransiCompany_kt = Math.round(objTotal['asuransiCompany_kt'] / 1000) * 1000
+        const pembKaryawan_pajak = Math.round(objTotal['pajakKaryawan'] / 1000) * 1000
+        const pembCompany_pajak = Math.round(objTotal['pajakCompany'] / 1000) * 1000
+        const pembGajiNett = objTotal['gajiBruto'] - (pembAsuransiKaryawan_ks + pembAsuransiKaryawan_kt + pembKaryawan_pajak + objTotal['totalBayarKasbon'])
+        const tanpaPembGajiNett = objTotal['gajiBruto'] - (objTotal['asuransiKaryawan_ks'] + objTotal['asuransiKaryawan_kt'] + objTotal['pajakKaryawan'] + objTotal['totalBayarKasbon'])
+        
+        objTotal['pembulatan'] = Math.round(pembGajiNett - tanpaPembGajiNett)
+        
+        objTotal['gajiNett'] = pembGajiNett
+        objTotal['asuransiKaryawan_ks'] = pembAsuransiKaryawan_ks
+        objTotal['asuransiCompany_ks'] = pembAsuransiCompany_ks
+        objTotal['asuransiKaryawan_kt'] = pembAsuransiKaryawan_kt
+        objTotal['asuransiCompany_kt'] = pembAsuransiCompany_kt
+        objTotal['pajakKaryawan'] = pembKaryawan_pajak
+        objTotal['pajakCompany'] = pembCompany_pajak
 
         getData.data = objTotal
 
