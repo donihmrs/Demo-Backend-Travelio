@@ -477,6 +477,8 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         objTotal['keterangan']['pembulatan'] = "Total Pembulatan"
         objTotal['keterangan']['totalBayarKasbon'] = "Total Pembayaran Kasbon dari keseluruhan Karyawan"
         objTotal['keterangan']['emp'] = "Berisikan Biaya-biaya per karyawan, seperti Kasbon"
+        objTotal['keterangan']['gajiBruto'] = "Penghasilan kotor yang diterima karyawan"
+        objTotal['keterangan']['gajiNett'] = "Penghasilan take-home pay atau yang diterima karyawan setelah semua pemotongan"
 
         //Hitung pajak
         for (const key in dataPtkp) {
@@ -785,21 +787,6 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             res.status(200).send(getData)
         }
     }
-}
-
-report.getKeteranganReport = async (req, res, next) => {
-    objTotal = {}
-    objTotal['details']['asuransiKaryawan_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Karyawan"
-    objTotal['details']['asuransiKaryawan_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Karyawan"
-    objTotal['details']['asuransiCompany_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Perusahaan"
-    objTotal['details']['asuransiCompany_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Perusahaan"
-    objTotal['details']['pajakKaryawan'] = "Total Biaya Pajak Yang Ditanggung Karyawan"
-    objTotal['details']['pajakCompany'] = "Total Biaya Pajak Yang Ditanggung Perusahaan"
-    objTotal['details']['pembulatan'] = "Total Pembulatan"
-    objTotal['details']['totalBayarKasbon'] = "Total Pembayaran Kasbon dari keseluruhan Karyawan"
-    objTotal['details']['emp'] = "Berisikan Biaya-biaya per karyawan, seperti Kasbon"
-
-    res.status(200).send(objTotal)
 }
 
 module.exports = report;
