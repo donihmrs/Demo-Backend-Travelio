@@ -1139,28 +1139,33 @@ karyawan.getAllEmployeeFull = async (req, res, next) => {
             
             const noUrut = parseInt(key) + 1
 
-            objTemp['No'] = noUrut
+            objTemp['No'] = noUrut.toString()
 
             if (ele.emp_middle_name !== "" && ele.emp_lastname !== "") {
-                objTemp['Full Name'] = ele.emp_firstname
+                objTemp['Full_Name'] = ele.emp_firstname
             } else if (ele.emp_middle_name !== "") {
-                objTemp['Full Name'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                objTemp['Full_Name'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
             } else {
-                objTemp['Full Name'] = ele.emp_firstname+" "+ele.emp_lastname
+                objTemp['Full_Name'] = ele.emp_firstname+" "+ele.emp_lastname
             }
 
             objTemp['ID'] = ele.employee_id
-            objTemp['Job Position'] = ele.jobName
-            objTemp['Job Date'] = lib.formatDateDb(ele.joined_date)
+            objTemp['Job_Position'] = ele.jobName
+            objTemp['Job_Date'] = lib.formatDateDb(ele.joined_date)
             objTemp['Address'] = ele.emp_street1
             objTemp['Division'] = ""
             objTemp['Phone'] = ele.emp_mobile
-            objTemp['ID Number'] = ele.emp_no_ktp
-            objTemp['Family Number'] = ele.emp_no_kk
-            objTemp['Date of Birth'] = ele.emp_tempat_lahir+","+lib.formatDateDb(ele.emp_birthday)
-            objTemp['Nationality'] = ele.nationName
+            objTemp['ID_Number'] = ele.emp_no_ktp
+            objTemp['Family_Number'] = ele.emp_no_kk
+            objTemp['Date_of_Birth'] = ele.emp_tempat_lahir+","+lib.formatDateDb(ele.emp_birthday)
+            if (ele.nationName === null) {
+                objTemp['Nationality'] = ""
+            } else {
+                objTemp['Nationality'] = ele.nationName
+            }
+            
             objTemp['Email'] = ele.otherEmail
-            objTemp['Marital Status'] = ele.emp_marital_status
+            objTemp['Marital_Status'] = ele.emp_marital_status
 
             let gender = "Male"
             if (ele.emp_gender === 2) {
@@ -1196,31 +1201,41 @@ karyawan.getAllEmployeeFull = async (req, res, next) => {
                 statusKaryawan = "Probation"
             }
 
-            objTemp['Employee Status'] = statusKaryawan
+            objTemp['Employee_Status'] = statusKaryawan
             objTemp['Religion'] = ele.emp_agama
 
-            objTemp['Company Name'] = ele.unitName
-            objTemp['Job Title'] = ele.jobName
+            if (ele.unitName === null) {
+                objTemp['Company_Name'] = ""
+            } else {
+                objTemp['Company_Name'] = ele.unitName
+            }
+
+            if (ele.jobName === null) {
+                objTemp['Job_Title'] = ""
+            } else {
+                objTemp['Job_Title'] = ele.jobName
+            }
+           
 
             switch (ele.ptkp_id) {
                 case 1:
-                    objTemp['Tax Status'] = "TK"
+                    objTemp['Tax_Status'] = "TK"
                     break;
                 case 2:
-                    objTemp['Tax Status'] = "K/0"
+                    objTemp['Tax_Status'] = "K/0"
                     break;
                 case 3:
-                    objTemp['Tax Status'] = "K/1"
+                    objTemp['Tax_Status'] = "K/1"
                     break;
                 case 4:
-                    objTemp['Tax Status'] = "K/2"
+                    objTemp['Tax_Status'] = "K/2"
                     break;
                 case 5:
-                    objTemp['Tax Status'] = "K/3"
+                    objTemp['Tax_Status'] = "K/3"
                     break;
             
                 default:
-                    objTemp['Tax Status'] = "TK"
+                    objTemp['Tax_Status'] = "TK"
                     break;
             }
 
