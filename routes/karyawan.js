@@ -61,5 +61,8 @@ router.post('/delCicilanKasbonById', function(req, res, next) {
     karyawan.delCicilanKasbonById(req,res,next)
 });
 
+router.get('/getAllEmployeeFull', function(req, res, next) {
+    karyawan.getAllEmployeeFull(req,res,next)
+});
 
 module.exports = router;

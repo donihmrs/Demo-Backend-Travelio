@@ -390,4 +390,26 @@ employeeModel.getIdEmp = async (data) => {
             .finally(() => conn.end())
 }
 
+employeeModel.getAllEmployeeFull = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    return await conn.promise().execute("SELECT emp.employee_id,emp.emp_npwp,emp.emp_firstname, emp.emp_middle_name, emp.emp_lastname,emp.emp_tempat_lahir"+
+    ",emp.emp_birthday,emp.joined_date,emp.emp_street1,emp.emp_mobile,emp.emp_no_ktp,emp.emp_no_kk,nation.name as nationName,emp.emp_oth_email AS otherEmail,emp.emp_status,emp.emp_agama"+
+    ",emp.emp_marital_status,emp.emp_gender,emp.ptkp_id,emp.status_karyawan, emp.emp_status,unit.name AS unitName, job.job_title AS jobName FROM hs_hr_employee AS emp "+
+    "LEFT JOIN ohrm_subunit AS unit ON emp.work_station = unit.id "+
+    "LEFT JOIN ohrm_job_title AS job ON emp.job_title_code = job.id "+
+    "LEFT JOIN ohrm_nationality AS nation ON emp.nation_code = nation.id")
+            .then(([rows, fields]) => {
+                if (rows.length > 0) {
+                    return lib.responseSuccess(rows, "Berhasil get all employee Full table hs_hr_employee, job title, report to dan sub unit ")
+                } else {
+                    return lib.responseSuccess([], "tidak ada data employee")
+                }
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 module.exports = employeeModel;

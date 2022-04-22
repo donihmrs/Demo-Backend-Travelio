@@ -1123,4 +1123,116 @@ karyawan.delCicilanKasbonById = async (req, res, next) => {
     }
 }
 
+karyawan.getAllEmployeeFull = async (req, res, next) => {
+    let data = {}
+    data['database'] = req.query.database
+
+    const getData = await employeeModel.getAllEmployeeFull(data)
+
+    let tempData = []
+
+    for (const key in getData.data) {
+        if (Object.hasOwnProperty.call(getData.data, key)) {
+            const ele = getData.data[key];
+
+            let objTemp = {}
+            
+            const noUrut = parseInt(key) + 1
+
+            objTemp['No'] = noUrut
+
+            if (ele.emp_middle_name !== "" && ele.emp_lastname !== "") {
+                objTemp['Full Name'] = ele.emp_firstname
+            } else if (ele.emp_middle_name !== "") {
+                objTemp['Full Name'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+            } else {
+                objTemp['Full Name'] = ele.emp_firstname+" "+ele.emp_lastname
+            }
+
+            objTemp['ID'] = ele.employee_id
+            objTemp['Job Position'] = ele.jobName
+            objTemp['Job Date'] = lib.formatDateDb(ele.joined_date)
+            objTemp['Address'] = ele.emp_street1
+            objTemp['Division'] = ""
+            objTemp['Phone'] = ele.emp_mobile
+            objTemp['ID Number'] = ele.emp_no_ktp
+            objTemp['Family Number'] = ele.emp_no_kk
+            objTemp['Date of Birth'] = ele.emp_tempat_lahir+","+lib.formatDateDb(ele.emp_birthday)
+            objTemp['Nationality'] = ele.nationName
+            objTemp['Email'] = ele.otherEmail
+            objTemp['Marital Status'] = ele.emp_marital_status
+
+            let gender = "Male"
+            if (ele.emp_gender === 2) {
+                gender = "Female"
+            }
+
+            objTemp['Gender'] = gender
+
+            switch (ele.status_karyawan) {
+                case 1:
+                    objTemp['Keterangan'] = "Active"
+                    break;
+                case 3:
+                    objTemp['Keterangan'] = "New Hire"
+                    break;
+                case 2:
+                    objTemp['Keterangan'] = "Resign"
+                    break;
+            
+                default:
+                    objTemp['Keterangan'] = "Active"
+                    break;
+            }
+
+            let statusKaryawan = "Permanent"
+
+            if (ele.emp_status === 1) {
+                statusKaryawan = "Permanent"
+            }
+            else if (ele.emp_status === 2) {
+                statusKaryawan = "Contract"
+            } else {
+                statusKaryawan = "Probation"
+            }
+
+            objTemp['Employee Status'] = statusKaryawan
+            objTemp['Religion'] = ele.emp_agama
+
+            objTemp['Company Name'] = ele.unitName
+            objTemp['Job Title'] = ele.jobName
+
+            switch (ele.ptkp_id) {
+                case 1:
+                    objTemp['Tax Status'] = "TK"
+                    break;
+                case 2:
+                    objTemp['Tax Status'] = "K/0"
+                    break;
+                case 3:
+                    objTemp['Tax Status'] = "K/1"
+                    break;
+                case 4:
+                    objTemp['Tax Status'] = "K/2"
+                    break;
+                case 5:
+                    objTemp['Tax Status'] = "K/3"
+                    break;
+            
+                default:
+                    objTemp['Tax Status'] = "TK"
+                    break;
+            }
+
+            tempData.push(objTemp)
+        }
+    }
+
+    if (getData.status == 200) {
+        res.status(200).send(tempData)
+    } else {
+        res.status(400).send(tempData)
+    }   
+}
+
 module.exports = karyawan;
