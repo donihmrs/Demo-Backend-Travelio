@@ -10,6 +10,7 @@ const ptkpModel = require(appDir+'/model/ptkpModel')
 const tarifModel = require(appDir+'/model/tarifModel')
 const absensiModel = require(appDir+'/model/absensiModel')
 const kasbonModel = require(appDir+'/model/kasbonModel')
+const employeeModel = require(appDir+'/model/employeeModel')
 
 const report = {}
 
@@ -194,7 +195,7 @@ report.getPayroll =  async (req, res, next) => {
                 if (resObj[ele.emp_number] == undefined) {
                     resObj[ele.emp_number] = {}
                     resObj[ele.emp_number]['kasbon'] = []
-                    resObj[ele.emp_number]['gajiBersih'] = ele.ebsal_basic_salary
+                    resObj[ele.emp_number]['gajiBersih'] = parseFloat(ele.ebsal_basic_salary)
                     resObj[ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
                     resObj[ele.emp_number]['namaSalary'] = ele.salary_component
                     resObj[ele.emp_number]['pemotongan'] = []
@@ -255,6 +256,7 @@ report.getPayroll =  async (req, res, next) => {
                     resObj[ele.emp_number]['pemotongan'].push(objDetail)
                 } else {
                     const objDetail = {}
+                    
                     if (ele.potongan_nilai != 0) {
                         if (ele.pemot_type == "%") {
                             objDetail['debit'] = Math.round(convertBpjsKsRange(ele,dataBpjsKs) * ele.potongan_nilai / 100)                    
@@ -787,6 +789,81 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             res.status(200).send(getData)
         }
     }
+}
+
+report.getSalaryEmp =  async (req, res, next) => {
+    const { isAsuransi, isPajak, isKasbon, database, emp, tanggal} = req.body
+
+    const getEmp = await employeeModel.getAllEmployeeSlipGajiById(req.body)
+
+    if (getEmp === 0) {
+        return res.status(400).send(getEmp)
+    }
+
+    const dataEmp = getEmp.data
+
+    let postDataSalary = {}
+    postDataSalary['database'] = database
+    postDataSalary['emp'] = dataEmp.idEmp
+
+    const getSalary = await employeeModel.getEmpSalaryById(postDataSalary)
+
+    if (getSalary === 0) {
+        return res.status(400).send(getSalary)
+    }
+
+    const dataSalary = getSalary.data
+
+    let postDataSpv = {}
+    postDataSpv['database'] = database
+    postDataSpv['emp'] = dataEmp.idSupervisor
+
+    const getSpv = await employeeModel.getNameEmployeeById(postDataSpv)
+
+    let dataSpv = null
+    
+    if (getSpv !== 0) {
+        dataSpv = getSpv.data
+    }
+
+    let objResult = {}
+    objResult['pengurangan'] = {}
+    objResult['profile'] = {}
+    objResult['salary'] = {}
+    objResult['spv'] = {}
+
+    objResult['profile']['name'] = dataEmp.emp_firstname+" "+dataEmp.emp_middle_name+" "+dataEmp.emp_lastname
+    objResult['profile']['unit_name'] = (dataEmp.unitName === null ? "-" : dataEmp.unitName)
+    objResult['profile']['unit_desk'] = (dataEmp.unitDeksripsi === null ? "-" : dataEmp.unitDeksripsi)
+    objResult['profile']['job'] = (dataEmp.jobName === null ? "-" : dataEmp.jobName)
+    objResult['profile']['ptkp'] = (dataEmp.statusPtkp === null ? "-" : dataEmp.statusPtkp)
+    
+    objResult['salary']['gaji'] = dataSalary.gaji
+    objResult['salary']['deskripsi'] = dataSalary.salaryName
+
+    if (dataSpv === null) {
+        objResult['spv']['name'] = "-"
+    } else {
+        objResult['spv']['name'] = dataSpv.emp_firstname+" "+dataSpv.emp_middle_name+" "+dataSpv.emp_lastname
+    }
+
+    let tempPengurangan = {}
+
+    tempPengurangan['Pinjaman'] = 0
+    tempPengurangan['Iuran BPJS Ketenagakerjaan'] = 0
+    tempPengurangan['Iuran BPJS Kesehatan'] = 0
+    tempPengurangan['PPH 21'] = 0
+    tempPengurangan['Total'] = 0
+
+    objResult['pengurangan'] = tempPengurangan
+
+    if (isAsuransi) {
+
+    }
+
+    console.log(objResult)
+
+    res.status(200).send(objResult)
 }
 
 module.exports = report;

@@ -13,4 +13,8 @@ router.get('/getPayrollJurnal', function(req, res, next) {
     report.getPayrollForJurnal(req,res,next)
 });
 
+router.post('/getSalaryEmp', function(req, res, next) {
+    report.getSalaryEmp(req,res,next)
+});
+
 module.exports = router;

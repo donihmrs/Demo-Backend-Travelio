@@ -75,6 +75,26 @@ employeeModel.getAllEmployeeNumber = async (data) => {
             .finally(() => conn.end())
 }
 
+employeeModel.getNameEmployeeById = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+
+    return await conn.promise().execute("SELECT emp_firstname,emp_middle_name,emp_lastname FROM hs_hr_employee WHERE emp_number = "+data.emp)
+            .then(([rows, fields]) => {
+                console.log("Berhasil get name by id")
+
+                if (rows.length > 0) {
+                    return lib.responseSuccess(rows[0], "Berhasil get name by id emp number dari table hs_hr_employee")
+                } else {
+                    return lib.responseSuccess(0, "Berhasil get name by id emp number dari table hs_hr_employee")
+                }
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 employeeModel.insertLamaran = async (data) => {
     const conn = await mysqlConf.conn(data.database);
     const values = [data.id_emp,data.jabatan,data.gajiTerakhir,data.gajiDiharapkan,data.tgl_masuk];
@@ -403,6 +423,47 @@ employeeModel.getAllEmployeeFull = async (data) => {
                     return lib.responseSuccess(rows, "Berhasil get all employee Full table hs_hr_employee, job title, report to dan sub unit ")
                 } else {
                     return lib.responseSuccess([], "tidak ada data employee")
+                }
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
+employeeModel.getAllEmployeeSlipGajiById = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    return await conn.promise().execute("SELECT emp.emp_number AS idEmp,emp.emp_firstname, emp.emp_middle_name, emp.emp_lastname "+
+    ",unit.name AS unitName, unit.description AS unitDeksripsi,spv.erep_sup_emp_number as idSupervisor "+
+    ",job.job_title AS jobName, ptkp.nama_ptkp AS statusPtkp FROM hs_hr_employee AS emp "+
+    "LEFT JOIN ohrm_subunit AS unit ON emp.work_station = unit.id "+
+    "LEFT JOIN ohrm_ptkp AS ptkp ON emp.ptkp_id = ptkp.ptkp_id "+
+    "LEFT JOIN hs_hr_emp_reportto AS spv ON spv.erep_sub_emp_number = emp.emp_number "+
+    "LEFT JOIN ohrm_job_title AS job ON emp.job_title_code = job.id WHERE emp.emp_number = "+data.emp)
+            .then(([rows, fields]) => {
+                if (rows.length > 0) {
+                    return lib.responseSuccess(rows[0], "Berhasil get employee Full table hs_hr_employee, job title, report to dan sub unit ")
+                } else {
+                    return lib.responseSuccess(0, "tidak ada data employee")
+                }
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
+employeeModel.getEmpSalaryById = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    return await conn.promise().execute("SELECT salary_component as salaryName,ebsal_basic_salary AS gaji FROM hs_hr_emp_basicsalary "+
+    "WHERE emp_number = "+data.emp)
+            .then(([rows, fields]) => {
+                if (rows.length > 0) {
+                    return lib.responseSuccess(rows[0], "Berhasil get salary table hs_hr_emp_basicsalary")
+                } else {
+                    return lib.responseSuccess(0, "tidak ada gaji")
                 }
             })
             .catch((err) => {
