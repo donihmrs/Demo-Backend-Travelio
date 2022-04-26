@@ -802,6 +802,9 @@ report.getSalaryEmp =  async (req, res, next) => {
         return res.status(400).send(getEmp)
     }
 
+    const dateNow = lib.formatDateDb(new Date()).split("-")
+    const dateIndo = dateNow[2]+" "+lib.convertMonthToNameIndo(dateNow[1])+" "+dateNow[0]
+
     const tglSplit = tanggal.split("-")
 
     const dataEmp = getEmp.data
@@ -994,6 +997,7 @@ report.getSalaryEmp =  async (req, res, next) => {
 
     objResult['salary']['nett'] = Math.round(gajiNett / 1000) * 1000
     objResult['pembulatan'] = gajiNettBulat - gajiNett
+    objResult['created_at'] = process.env.NAMA_KOTA+", "+dateIndo
 
     console.log(objResult)
 

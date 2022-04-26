@@ -278,4 +278,51 @@ lib.formatDateDb = (date) => {
   return [year, month, day].join('-');
 }
 
+lib.convertMonthToNameIndo = (month) => {
+  let result = ""
+  switch (month) {
+    case '01':
+      result = "Januari"
+      break;
+    case '02':
+      result = "Febuari"
+      break;
+    case '03':
+      result = "Maret"
+      break;
+    case '04':
+      result = "April"
+      break;
+    case '05':
+      result = "Mei"
+      break;
+    case '06':
+      result = "Juni"
+      break;
+    case '07':
+      result = "Juli"
+      break;
+    case '08':
+      result = "Agustus"
+      break;
+    case '09':
+      result = "Agustus"
+      break;
+    case '10':
+      result = "Agustus"
+      break;
+    case '11':
+      result = "Agustus"
+      break;
+    case '12':
+      result = "Agustus"
+      break;
+  
+    default:
+      result = month
+      break;
+  }
+
+  return result;
+} 
 module.exports = lib;
