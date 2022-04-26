@@ -436,7 +436,7 @@ employeeModel.getAllEmployeeSlipGajiById = async (data) => {
     const conn = await mysqlConf.conn(data.database);
     return await conn.promise().execute("SELECT emp.emp_number AS idEmp,emp.emp_firstname, emp.emp_middle_name, emp.emp_lastname "+
     ",unit.name AS unitName, unit.description AS unitDeksripsi,spv.erep_sup_emp_number as idSupervisor "+
-    ",job.job_title AS jobName, ptkp.nama_ptkp AS statusPtkp FROM hs_hr_employee AS emp "+
+    ",job.job_title AS jobName, ptkp.inisial_ptkp AS statusPtkp, ptkp.nilai_setahun_ptkp AS nilaiPktp, ptkp.byr_karyawan_ptkp AS byrPtkp FROM hs_hr_employee AS emp "+
     "LEFT JOIN ohrm_subunit AS unit ON emp.work_station = unit.id "+
     "LEFT JOIN ohrm_ptkp AS ptkp ON emp.ptkp_id = ptkp.ptkp_id "+
     "LEFT JOIN hs_hr_emp_reportto AS spv ON spv.erep_sub_emp_number = emp.emp_number "+

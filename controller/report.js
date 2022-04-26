@@ -4,6 +4,7 @@ const token = require(appDir+'/controller/token')
 const lib = require(appDir+'/controller/lib')
 const axios = require('axios');
 const { get } = require('http');
+const { parse } = require('url');
 
 const reportModel = require(appDir+'/model/reportModel')
 const ptkpModel = require(appDir+'/model/ptkpModel')
@@ -11,6 +12,7 @@ const tarifModel = require(appDir+'/model/tarifModel')
 const absensiModel = require(appDir+'/model/absensiModel')
 const kasbonModel = require(appDir+'/model/kasbonModel')
 const employeeModel = require(appDir+'/model/employeeModel')
+const pemotonganModel = require(appDir+'/model/pemotonganModel')
 
 const report = {}
 
@@ -800,6 +802,8 @@ report.getSalaryEmp =  async (req, res, next) => {
         return res.status(400).send(getEmp)
     }
 
+    const tglSplit = tanggal.split("-")
+
     const dataEmp = getEmp.data
 
     let postDataSalary = {}
@@ -826,13 +830,31 @@ report.getSalaryEmp =  async (req, res, next) => {
         dataSpv = getSpv.data
     }
 
+    const getTarif = await tarifModel.getAll(req.body)
+    
+    let gajiEmp = {}
+    let dataBpjsKs = {}
+    
+    if (getTarif != 200 && getTarif.data.length == 0) {
+        res.status(400).send(getTarif)
+    }
+
+    let dataTarif = getTarif.data
+
     let objResult = {}
     objResult['pengurangan'] = {}
     objResult['profile'] = {}
     objResult['salary'] = {}
     objResult['spv'] = {}
 
-    objResult['profile']['name'] = dataEmp.emp_firstname+" "+dataEmp.emp_middle_name+" "+dataEmp.emp_lastname
+    if (dataEmp.emp_middle_name !== "" && dataEmp.emp_lastname !== "") {
+        objResult['profile']['name'] = dataEmp.emp_firstname
+    } else if (dataEmp.emp_middle_name !== "") {
+        objResult['profile']['name'] = dataEmp.emp_firstname+" "+dataEmp.emp_middle_name+" "+dataEmp.emp_lastname
+    } else {
+        objResult['profile']['name'] = dataEmp.emp_firstname+" "+dataEmp.emp_lastname
+    }
+
     objResult['profile']['unit_name'] = (dataEmp.unitName === null ? "-" : dataEmp.unitName)
     objResult['profile']['unit_desk'] = (dataEmp.unitDeksripsi === null ? "-" : dataEmp.unitDeksripsi)
     objResult['profile']['job'] = (dataEmp.jobName === null ? "-" : dataEmp.jobName)
@@ -858,8 +880,120 @@ report.getSalaryEmp =  async (req, res, next) => {
     objResult['pengurangan'] = tempPengurangan
 
     if (isAsuransi) {
+        const getPemotongan = await pemotonganModel.getAll(database)
 
+        if (getPemotongan.data.length > 0) {
+            //BPJS Kesehatan
+            let tarifBpjs_ks = {}
+            for (const key in dataTarif) {
+                if (Object.hasOwnProperty.call(dataTarif, key)) {
+                    const ele = dataTarif[key];
+                    
+                    if (ele.tarif_group === 1) {
+                        tarifBpjs_ks = ele
+                        break;
+                    }
+                }
+            }
+
+            let biayaBpjs_ks = parseFloat(dataSalary.gaji)
+            if (parseFloat(dataSalary.gaji) < parseFloat(tarifBpjs_ks.tarif_min)) {
+                biayaBpjs_ks = parseFloat(tarifBpjs_ks.tarif_val_min)
+            } else if (parseFloat(dataSalary.gaji) > parseFloat(tarifBpjs_ks.tarif_max)) {
+                biayaBpjs_ks = parseFloat(tarifBpjs_ks.tarif_val_max)
+            }
+
+            const dataPemotongan = getPemotongan.data
+
+            for (const key in dataPemotongan) {
+                if (Object.hasOwnProperty.call(dataPemotongan, key)) {
+                    const ele = dataPemotongan[key];
+
+                    if (ele.pemot_group === 1) {
+                        const hasil = Math.round(biayaBpjs_ks * parseFloat(ele.pemot_byr_karyawan) / 100)
+                        tempPengurangan['Iuran BPJS Kesehatan'] += hasil
+                        tempPengurangan['Total'] += hasil
+                    } else if (ele.pemot_group === 2) {
+                        const hasil = Math.round(parseFloat(dataSalary.gaji) * parseFloat(ele.pemot_byr_karyawan) / 100)
+                        tempPengurangan['Iuran BPJS Ketenagakerjaan'] += hasil
+                        tempPengurangan['Total'] += hasil
+                    }
+                }
+            }
+        }
     }
+
+    if (isPajak) {
+        let totalGajiSetahun = parseFloat(dataSalary.gaji) * 12
+        for (const key in dataTarif) {
+            if (Object.hasOwnProperty.call(dataTarif, key)) {
+                const eleTarif = dataTarif[key];
+                if (eleTarif.tarifRangeId !== 1) {
+                    if (totalGajiSetahun >= parseFloat(dataEmp.nilaiPktp)) {
+                        let byrJabatan = totalGajiSetahun * 5 /100
+                        if (byrJabatan > 6000000) {
+                            byrJabatan = 6000000
+                        }
+
+                        const gajiKurangJabatan = totalGajiSetahun - byrJabatan
+                        let tarifMin = parseFloat(eleTarif.tarif_min)
+
+                        if (parseFloat(eleTarif.tarif_min) !== 0) {
+                            tarifMin = parseFloat(eleTarif.tarif_min) - 1
+                        }
+                        
+                        const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(dataEmp.nilaiPktp))
+
+                        if (eleTarif.tarif_group === 2 && eleTarif.tarif_type === "%") {
+                            if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_min)) {
+                                const persenPtkp = parseFloat(eleTarif.tarif_val_max)
+                                let byrPph = ((parseFloat(gajiKurangPtkp) - tarifMin) * persenPtkp / 100) / 12
+                                
+                                let byrPphMax = 0
+                                if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_max)) {
+                                    byrPphMax = ((parseFloat(eleTarif.tarif_max) - tarifMin) * persenPtkp / 100) / 12 
+
+                                    byrPph = byrPphMax
+                                }
+
+                                const hasil = Math.round((byrPph * parseFloat(dataEmp.byrPtkp) / 5))
+                                tempPengurangan['PPH 21'] += hasil
+                                tempPengurangan['Total'] += hasil
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (isKasbon) {
+        let postKasbon = {}
+        postKasbon['database'] = database
+        postKasbon['emp'] = dataEmp.idEmp
+        postKasbon['bulan'] = tglSplit[1]
+        postKasbon['tahun'] = tglSplit[0]
+
+        const getKasbon = await kasbonModel.getRincianEmpById(postKasbon)
+
+        if (getKasbon.data.length > 0) {
+            const dataKasbon = getKasbon.data
+            for (const key in dataKasbon) {
+                if (Object.hasOwnProperty.call(dataKasbon, key)) {
+                    const ele = dataKasbon[key];
+                    tempPengurangan['Pinjaman'] += parseFloat(ele.bayarKasJumlah)
+                    tempPengurangan['Total'] += parseFloat(ele.bayarKasJumlah)
+                }
+            }
+        }
+    }
+
+    const gajiNett = parseFloat(dataSalary.gaji) - tempPengurangan['Total']
+    const gajiNettBulat = Math.round(gajiNett / 1000) * 1000
+
+
+    objResult['salary']['nett'] = Math.round(gajiNett / 1000) * 1000
+    objResult['pembulatan'] = gajiNettBulat - gajiNett
 
     console.log(objResult)
 
