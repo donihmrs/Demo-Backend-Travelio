@@ -862,7 +862,7 @@ report.getSalaryEmp =  async (req, res, next) => {
     objResult['profile']['unit_desk'] = (dataEmp.unitDeksripsi === null ? "-" : dataEmp.unitDeksripsi)
     objResult['profile']['job'] = (dataEmp.jobName === null ? "-" : dataEmp.jobName)
     objResult['profile']['ptkp'] = (dataEmp.statusPtkp === null ? "-" : dataEmp.statusPtkp)
-    
+    objResult['profile']['periode'] = lib.convertMonthToNameIndo(dateNow[1])+" "+dateNow[0]
     objResult['salary']['gaji'] = dataSalary.gaji
     objResult['salary']['deskripsi'] = dataSalary.salaryName
 
@@ -874,10 +874,10 @@ report.getSalaryEmp =  async (req, res, next) => {
 
     let tempPengurangan = {}
 
-    tempPengurangan['Pinjaman'] = 0
-    tempPengurangan['Iuran BPJS Ketenagakerjaan'] = 0
-    tempPengurangan['Iuran BPJS Kesehatan'] = 0
-    tempPengurangan['PPH 21'] = 0
+    tempPengurangan['pinjaman'] = 0
+    tempPengurangan['bpjsKetenagakerjaan'] = 0
+    tempPengurangan['bpjsKesehatan'] = 0
+    tempPengurangan['pph21'] = 0
     tempPengurangan['Total'] = 0
 
     objResult['pengurangan'] = tempPengurangan
@@ -914,16 +914,19 @@ report.getSalaryEmp =  async (req, res, next) => {
 
                     if (ele.pemot_group === 1) {
                         const hasil = Math.round(biayaBpjs_ks * parseFloat(ele.pemot_byr_karyawan) / 100)
-                        tempPengurangan['Iuran BPJS Kesehatan'] += hasil
+                        tempPengurangan['bpjsKesehatan'] += hasil
                         tempPengurangan['Total'] += hasil
                     } else if (ele.pemot_group === 2) {
                         const hasil = Math.round(parseFloat(dataSalary.gaji) * parseFloat(ele.pemot_byr_karyawan) / 100)
-                        tempPengurangan['Iuran BPJS Ketenagakerjaan'] += hasil
+                        tempPengurangan['bpjsKetenagakerjaan'] += hasil
                         tempPengurangan['Total'] += hasil
                     }
                 }
             }
         }
+    } else {
+        tempPengurangan['bpjsKetenagakerjaan'] = "-"
+        tempPengurangan['bpjsKesehatan'] = "-"
     }
 
     if (isPajak) {
@@ -960,7 +963,7 @@ report.getSalaryEmp =  async (req, res, next) => {
                                 }
 
                                 const hasil = Math.round((byrPph * parseFloat(dataEmp.byrPtkp) / 5))
-                                tempPengurangan['PPH 21'] += hasil
+                                tempPengurangan['pph21'] += hasil
                                 tempPengurangan['Total'] += hasil
                             }
                         }
@@ -968,6 +971,8 @@ report.getSalaryEmp =  async (req, res, next) => {
                 }
             }
         }
+    } else {
+        tempPengurangan['pph21'] = "-"
     }
 
     if (isKasbon) {
@@ -984,11 +989,13 @@ report.getSalaryEmp =  async (req, res, next) => {
             for (const key in dataKasbon) {
                 if (Object.hasOwnProperty.call(dataKasbon, key)) {
                     const ele = dataKasbon[key];
-                    tempPengurangan['Pinjaman'] += parseFloat(ele.bayarKasJumlah)
+                    tempPengurangan['pinjaman'] += parseFloat(ele.bayarKasJumlah)
                     tempPengurangan['Total'] += parseFloat(ele.bayarKasJumlah)
                 }
             }
         }
+    } else {
+        tempPengurangan['pinjaman'] = "-"
     }
 
     const gajiNett = parseFloat(dataSalary.gaji) - tempPengurangan['Total']
@@ -998,8 +1005,6 @@ report.getSalaryEmp =  async (req, res, next) => {
     objResult['salary']['nett'] = Math.round(gajiNett / 1000) * 1000
     objResult['pembulatan'] = gajiNettBulat - gajiNett
     objResult['created_at'] = process.env.NAMA_KOTA+", "+dateIndo
-
-    console.log(objResult)
 
     res.status(200).send(objResult)
 }
