@@ -645,10 +645,10 @@ karyawan.addPemotongan = async (req, res, next) => {
         let tglMulai = "0000-00-00";
         let tglAkhir = "0000-00-00";
         
-        if (getTglMulai.year !== undefined) {
+        if (getTglMulai.year !== undefined && getTglMulai.year !== '') {
             tglMulai = getTglMulai.year +'-'+ lib.dateMonth(getTglMulai.month) +'-'+ lib.dateDay(getTglMulai.day)
         }
-        if (getTglAkhir.year !== undefined) {
+        if (getTglAkhir.year !== undefined && getTglAkhir.year !== '') {
             tglAkhir = getTglAkhir.year +'-'+ lib.dateMonth(getTglAkhir.month) +'-'+ lib.dateDay(getTglAkhir.day)
         }
 
@@ -998,7 +998,7 @@ karyawan.addKasbon = async (req, res, next) => {
 
         let tglKasbon = "0000-00-00";
         
-        if (getTglKasbon.year !== undefined) {
+        if (getTglKasbon.year !== undefined && getTglKasbon.year !== '') {
             tglKasbon = getTglKasbon.year +'-'+ lib.dateMonth(getTglKasbon.month) +'-'+ lib.dateDay(getTglKasbon.day)
         }
  
@@ -1042,7 +1042,7 @@ karyawan.addCicilanKasbon = async (req, res, next) => {
 
         let tglCicilan = "0000-00-00";
         
-        if (getTglCicilan.year !== undefined) {
+        if (getTglCicilan.year !== undefined && getTglCicilan.year !== '') {
             tglCicilan = getTglCicilan.year +'-'+ lib.dateMonth(getTglCicilan.month) +'-'+ lib.dateDay(getTglCicilan.day)
         }
  
