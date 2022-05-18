@@ -636,6 +636,11 @@ karyawan.addPemotongan = async (req, res, next) => {
     try {
         const getTglMulai = req.body.tanggalMulai
         const getTglAkhir = req.body.tanggalAkhir
+        let getNilai = req.body.nilai
+
+        if (getNilai == '') {
+            getNilai = 0
+        }
 
         let tglMulai = "0000-00-00";
         let tglAkhir = "0000-00-00";
@@ -658,7 +663,7 @@ karyawan.addPemotongan = async (req, res, next) => {
 
             if (getAllEmp.status == 200) {
                 await getAllEmp.data.forEach(ele => {
-                    const tempData = [ele.emp_number,req.body.jenis,req.body.nilai,req.body.keterangan,tglMulai,tglAkhir]
+                    const tempData = [ele.emp_number,req.body.jenis,getNilai,req.body.keterangan,tglMulai,tglAkhir]
                     data['form'].push(tempData)
                 });
 
@@ -669,7 +674,7 @@ karyawan.addPemotongan = async (req, res, next) => {
             data['database'] = req.body.database
             data['nama'] = req.body.nama
             data['jenis'] = req.body.jenis
-            data['nilai'] = req.body.nilai
+            data['nilai'] = getNilai
             data['keterangan'] = req.body.keterangan
             data['tglMulai'] = tglMulai
             data['tglAkhir'] = tglAkhir
