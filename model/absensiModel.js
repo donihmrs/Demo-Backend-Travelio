@@ -41,6 +41,25 @@ absensiModel.holiday = async (data) => {
             .finally(() => conn.end())
 }
 
+absensiModel.holidayAbsensi = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    return await conn.promise().execute("SELECT  `date` AS holiDate FROM `ohrm_holiday` WHERE `date` BETWEEN '"+data.dateStart+"' AND '"+data.dateEnd+"'")
+            .then(([rows, fields]) => {
+                if (rows.length > 0) {
+                    console.log("Berhasil get tanggal holidays Absensi")
+                    return lib.responseSuccess(rows, "Berhasil get id employee dari table ohrm_holiday")
+                } else {
+                    console.log("Tidak ada data")
+                    return lib.responseSuccess([], "tidak ada tanggal holiday pada table ohrm_holiday")
+                }
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 absensiModel.report = async (data) => {
     const conn = await mysqlConf.conn(data.database);
 

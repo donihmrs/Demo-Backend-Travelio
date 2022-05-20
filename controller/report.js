@@ -1041,6 +1041,20 @@ report.getAbsensi =  async (req, res, next) => {
         }
     }
 
+    const getHoliday = await absensiModel.holidayAbsensi(req.query)
+
+    const dataHoliday = getHoliday.data
+
+    if (dataHoliday.length > 0) {
+        for (const key in dataHoliday) {
+            if (Object.hasOwnProperty.call(dataHoliday, key)) {
+                const ele = dataHoliday[key];
+                const dateHoliday = moment.tz(ele.holiDate, process.env.TIMEZONE).format("MMM DD")
+                arrDate.push(dateHoliday)
+            }
+        }
+    }
+
     let tempArrData = [] 
 
     arrName.forEach(name => {
@@ -1089,6 +1103,19 @@ report.getAbsensi =  async (req, res, next) => {
                             ele["total_waktu"] += parseFloat(data)
                         } else {
                             ele[key1] = 0
+                        }
+
+                        if (dataHoliday.length > 0) {
+                            for (const keyHoliday in dataHoliday) {
+                                if (Object.hasOwnProperty.call(dataHoliday, keyHoliday)) {
+                                    const eleHoliday = dataHoliday[keyHoliday];
+                                    const dateHoliday = moment.tz(eleHoliday.holiDate, process.env.TIMEZONE).format("MMM DD")
+                                    if (key1 === dateHoliday.replace(" ","_")) {
+                                        ele[key1] = "Holiday"
+                                        ele["hari_kerja"]++
+                                    }
+                                }
+                            }
                         }
                     }
                 }
