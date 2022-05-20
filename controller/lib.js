@@ -278,6 +278,24 @@ lib.formatDateDb = (date) => {
   return [year, month, day].join('-');
 }
 
+lib.timeFormat = (date) => {
+  var d = new Date(date),
+      hours = d.getHours(),
+      minutes =  d.getMinutes(),
+      seconds = d.getSeconds();
+
+  if (hours < 10) 
+    hours = '0' + hours;
+
+  if (minutes < 10) 
+    minutes = '0' + minutes;
+
+  if (seconds < 10) 
+    seconds = '0' + seconds;
+
+  return [hours, minutes, seconds].join(':');
+}
+
 lib.convertMonthToNameIndo = (month) => {
   let result = ""
   switch (month) {
@@ -325,4 +343,9 @@ lib.convertMonthToNameIndo = (month) => {
 
   return result;
 } 
+
+lib.convertTimezone = (date, tzString) => {
+  return new Date(date).toLocaleString('en-US', { timeZone: tzString });
+}
+
 module.exports = lib;

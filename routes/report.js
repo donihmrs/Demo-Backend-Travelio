@@ -17,4 +17,8 @@ router.post('/getSalaryEmp', function(req, res, next) {
     report.getSalaryEmp(req,res,next)
 });
 
+router.get('/getAbsensi', function(req, res, next) {
+    report.getAbsensi(req,res,next)
+});
+
 module.exports = router;

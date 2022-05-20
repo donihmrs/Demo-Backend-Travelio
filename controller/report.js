@@ -45,7 +45,7 @@ report.getPayroll =  async (req, res, next) => {
     data['tahun'] = tahun
     data['emp'] = emp
 
-    const dataHoliday = await absensiModel.holiday(data)
+    // const dataHoliday = await absensiModel.holiday(data)
 
     const getKasbon = await kasbonModel.getAllRincianEmp(data)
     let dataKasbon = []
@@ -1007,6 +1007,107 @@ report.getSalaryEmp =  async (req, res, next) => {
     objResult['created_at'] = process.env.NAMA_KOTA+", "+dateIndo
 
     res.status(200).send(objResult)
+}
+
+report.getAbsensi =  async (req, res, next) => {
+    const moment = require('moment-timezone'); 
+
+    const { database, dateStart, dateEnd} = req.query
+
+    const getReport = await absensiModel.report(req.query)
+
+    if (getReport === 0) {
+        return res.status(400).send(getReport)
+    }
+
+    const dataReport = getReport.data
+
+    let arrDate = [] 
+    let arrName = [] 
+
+    for (const key in dataReport) {
+        if (Object.hasOwnProperty.call(dataReport, key)) {
+            const ele = dataReport[key];
+
+            const dateHeader = moment.tz(ele.inTime, process.env.TIMEZONE).format("MMM DD")
+
+            if (!arrDate.includes(dateHeader)) {
+                arrDate.push(dateHeader)
+            }
+
+            if (!arrName.includes(ele.fullName)) {
+                arrName.push(ele.fullName)
+            }
+        }
+    }
+
+    let tempArrData = [] 
+
+    arrName.forEach(name => {
+        let dataArr = {}
+        dataArr['nama'] = name
+        arrDate.forEach(date => {
+            dataArr[date.replace(" ","_")] = null
+        });
+
+        dataArr['total_waktu'] = 0
+        dataArr['hari_kerja'] = 0
+
+        tempArrData.push(dataArr)
+    });
+
+    for (const key in dataReport) {
+        if (Object.hasOwnProperty.call(dataReport, key)) {
+            const ele = dataReport[key];
+            if (ele.inTime !== null && ele.outTime !== null) {
+                const resDateIn = Date.parse(new Date(ele.inTime));
+                const resDateOut = Date.parse(new Date(ele.outTime));
+                const diffTime = resDateOut - resDateIn
+                
+                const getDiffTime = new Date(diffTime)
+                const hourDiffTime = getDiffTime.getHours()+"."+getDiffTime.getMinutes()
+                const dateHeader = moment.tz(ele.inTime, process.env.TIMEZONE).format("MMM DD")
+
+                tempArrData.forEach(eleArr => {
+                    if (eleArr["nama"] === ele.fullName) {
+                        eleArr[dateHeader.replace(" ","_")] = hourDiffTime
+                    }
+                });
+            }
+        }
+    }
+  
+    for (const key in tempArrData) {
+        if (Object.hasOwnProperty.call(tempArrData, key)) {
+            const ele = tempArrData[key];
+            for (const key1 in ele) {
+                if (Object.hasOwnProperty.call(ele, key1)) {
+                    const data = ele[key1];
+                    if (key1 !== "nama" && key1 !== "hari_kerja" && key1 !== "total_waktu") {
+                        if (data !== null) {
+                            ele["hari_kerja"]++
+                            ele["total_waktu"] += parseFloat(data)
+                        } else {
+                            ele[key1] = 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let objResult = {}
+    objResult['status'] = 200
+    objResult['message'] = "Data berhasil di proses"
+    objResult['data'] = tempArrData
+    
+    if (tempArrData.length === 0) {
+        objResult['status'] = 400
+        objResult['message'] = "Data tidak tersedia"
+        res.status(400).send(objResult)
+    } else {
+        res.status(200).send(objResult)
+    }
 }
 
 module.exports = report;
