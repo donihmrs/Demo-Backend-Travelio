@@ -1255,4 +1255,18 @@ karyawan.getAllEmployeeFull = async (req, res, next) => {
     }   
 }
 
+karyawan.updateJobsDesc = async (req, res, next) => {
+    let data = {}
+    data['database'] = req.body.database
+    data['idEmp'] = req.body.data.emp_number
+    data['jobsDesc'] = req.body.data.job_desc
+
+    const getData = await employeeModel.updateJobsDesc(data)
+    if (getData.status == 200) {
+        res.status(200).send(getData)
+    } else {
+        res.status(400).send(getData)
+    }
+}
+
 module.exports = karyawan;

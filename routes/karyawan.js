@@ -65,4 +65,9 @@ router.get('/getAllEmployeeFull', function(req, res, next) {
     karyawan.getAllEmployeeFull(req,res,next)
 });
 
+router.post('/updateJobsDesc', function(req, res, next) {
+    karyawan.updateJobsDesc(req,res,next)
+});
+
+
 module.exports = router;

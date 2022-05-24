@@ -473,4 +473,20 @@ employeeModel.getEmpSalaryById = async (data) => {
             .finally(() => conn.end())
 }
 
+employeeModel.updateJobsDesc = async (data) => {
+    const conn = await mysqlConf.conn(data.database);
+    const values = [data.jobsDesc,data.idEmp];
+    
+    return await conn.promise().execute("UPDATE hs_hr_employee SET job_desc = ? WHERE emp_number = ?",values)
+            .then(([result, fields]) => {
+                console.log("Berhasil Update Jobs Desc Karyawan ")
+                return lib.responseSuccess(data.nama, "Berhasil Update jobs desc karyawan pada table hs_hr_employee")
+            })
+            .catch((err) => {
+                console.log("Failed Execute Query "+String(err))
+                return lib.responseError(400, "Failed Execute Query "+String(err))
+            })
+            .finally(() => conn.end())
+}
+
 module.exports = employeeModel;
