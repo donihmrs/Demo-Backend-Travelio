@@ -9,6 +9,7 @@ const skillModel = require(appDir+'/model/skillModel')
 const absensiModel = require(appDir+'/model/absensiModel')
 const jobModel = require(appDir+'/model/jobModel')
 const kasbonModel = require(appDir+'/model/kasbonModel')
+const workShiftModel = require(appDir+'/model/workShiftModel')
 
 const karyawan = {}
 
@@ -924,7 +925,23 @@ karyawan.absenFinger = async (req, res, next) => {
         const getData = req.body.data
 
         const getDataEmp = await employeeModel.getAllEmployeeNumber(tempArr)
-        
+
+        let dataWorkshift = {}
+        dataWorkshift['database'] = req.body.database
+
+        const getWorkshift = await workShiftModel.getShiftChangeDay(dataWorkshift)
+
+        dataWorkshift['id'] = getWorkshift.data.id_workshift
+
+        const getWorkshiftEmp = await workShiftModel.getShiftWorkEmpChangeDay(dataWorkshift)
+
+        Date.prototype.minDays = function(days) {
+            this.setDate(this.getDate() - days);
+            return this;
+        }
+
+        let tempEmpLembur = {}
+
         await getData.forEach(async ele => {
             let data = {}
             data['database'] = req.body.database
@@ -944,7 +961,35 @@ karyawan.absenFinger = async (req, res, next) => {
             
             const statusAbsen = ele.status
 
+            //Workshift 
             if (data['idEmp'] !== 0) {
+                if (getWorkshiftEmp.status === 200) {
+                    for (const key in getWorkshiftEmp.data) {
+                        if (Object.hasOwnProperty.call(getWorkshiftEmp.data, key)) {
+                            const ele = getWorkshiftEmp.data[key];
+                            if (getIdEmp.emp_number === ele.id_emp) {
+                                if (tempEmpLembur[ele.id_emp] === undefined) {
+                                    tempEmpLembur[ele.id_emp] = []
+                                    tempEmpLembur[ele.id_emp].push(data['date'])
+                                } else {
+                                    if (statusAbsen === '1') {
+                                        const dateMinus = new Date(data['date'])
+                                        const dateConvertDb = lib.formatDateDb(dateMinus.minDays(1))
+
+                                        if (!tempEmpLembur[ele.id_emp].includes(data['date'])) {
+                                            data['date'] = dateConvertDb
+                                        }
+
+                                        tempEmpLembur[ele.id_emp] = []
+                                    } else {
+                                        tempEmpLembur[ele.id_emp].push(data['date'])
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (statusAbsen == '0') {
                     data['status'] = "PUNCHED IN"                
                 } else {
