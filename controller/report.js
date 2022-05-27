@@ -461,25 +461,25 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         let objTotal = {}
         objTotal['details'] = {}
         objTotal['details']['gajiBruto'] = 0
-        objTotal['details']['asuransiKaryawan_ks'] = 0
-        objTotal['details']['asuransiKaryawan_kt'] = 0
-        objTotal['details']['asuransiCompany_ks'] = 0
-        objTotal['details']['asuransiCompany_kt'] = 0
-        objTotal['details']['pajakKaryawan'] = 0
-        objTotal['details']['pajakCompany'] = 0
+        objTotal['details']['bi_bpjs_ks'] = 0
+        objTotal['details']['bi_bpjs_kt'] = 0
+        objTotal['details']['hutang_bpjs_ks'] = 0
+        objTotal['details']['hutang_bpjs_kt'] = 0
+        objTotal['details']['bi_pph21'] = 0
+        objTotal['details']['hutang_pph21'] = 0
         objTotal['details']['pembulatan'] = 0
-        objTotal['details']['totalBayarKasbon'] = 0
+        objTotal['details']['total_pinjaman_karyawan'] = 0
         objTotal['details']['emp'] = {}
 
         objTotal['keterangan'] = {}
-        objTotal['keterangan']['asuransiKaryawan_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Karyawan"
-        objTotal['keterangan']['asuransiKaryawan_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Karyawan"
-        objTotal['keterangan']['asuransiCompany_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Perusahaan"
-        objTotal['keterangan']['asuransiCompany_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Perusahaan"
-        objTotal['keterangan']['pajakKaryawan'] = "Total Biaya Pajak Yang Ditanggung Karyawan"
-        objTotal['keterangan']['pajakCompany'] = "Total Biaya Pajak Yang Ditanggung Perusahaan"
+        objTotal['keterangan']['bi_bpjs_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Karyawan"
+        objTotal['keterangan']['bi_bpjs_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Karyawan"
+        objTotal['keterangan']['hutang_bpjs_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Perusahaan"
+        objTotal['keterangan']['hutang_bpjs_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Perusahaan"
+        objTotal['keterangan']['bi_pph21'] = "Total Biaya Pajak Yang Ditanggung Karyawan"
+        objTotal['keterangan']['hutang_pph21'] = "Total Biaya Pajak Yang Ditanggung Perusahaan"
         objTotal['keterangan']['pembulatan'] = "Total Pembulatan"
-        objTotal['keterangan']['totalBayarKasbon'] = "Total Pembayaran Kasbon dari keseluruhan Karyawan"
+        objTotal['keterangan']['total_pinjaman_karyawan'] = "Total Pembayaran Kasbon dari keseluruhan Karyawan"
         objTotal['keterangan']['emp'] = "Berisikan Biaya-biaya per karyawan, seperti Kasbon"
         objTotal['keterangan']['gajiBruto'] = "Penghasilan kotor yang diterima karyawan"
         objTotal['keterangan']['gajiNett'] = "Penghasilan take-home pay atau yang diterima karyawan setelah semua pemotongan"
@@ -539,8 +539,8 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                         ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] = Math.round((sumPpn * ele.byr_karyawan_ptkp / 5))
                         ptkpObj[ele.emp_number]['pajak']['pph21Company'] = Math.round((sumPpn * ele.byr_company_ptkp / 5))
 
-                        objTotal['details']['pajakKaryawan'] += Math.round((sumPpn * ele.byr_karyawan_ptkp / 5))
-                        objTotal['details']['pajakCompany'] += Math.round((sumPpn * ele.byr_company_ptkp / 5))
+                        objTotal['details']['bi_pph21'] += Math.round((sumPpn * ele.byr_karyawan_ptkp / 5))
+                        objTotal['details']['hutang_pph21'] += Math.round((sumPpn * ele.byr_company_ptkp / 5))
 
                     } else {
                         ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] = 0
@@ -574,21 +574,21 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                         if (ele.pemot_type == "%") {
                             objDetail['debit'] = ele.ebsal_basic_salary * ele.potongan_nilai / 100    
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += byrBpjsKesehatan * ele.potongan_nilai / 100    
-                                objTotal['details']['asuransiCompany_ks'] += 0
+                                objTotal['details']['bi_bpjs_ks'] += byrBpjsKesehatan * ele.potongan_nilai / 100    
+                                objTotal['details']['hutang_bpjs_ks'] += 0
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * ele.potongan_nilai / 100    
-                                objTotal['details']['asuransiCompany_kt'] += 0
+                                objTotal['details']['bi_bpjs_kt'] += ele.ebsal_basic_salary * ele.potongan_nilai / 100    
+                                objTotal['details']['hutang_bpjs_kt'] += 0
                             } 
                         } else {
                             objDetail['debit'] = ele.potongan_nilai;
 
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += ele.potongan_nilai  
-                                objTotal['details']['asuransiCompany_ks'] += 0
+                                objTotal['details']['bi_bpjs_ks'] += ele.potongan_nilai  
+                                objTotal['details']['hutang_bpjs_ks'] += 0
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += ele.potongan_nilai    
-                                objTotal['details']['asuransiCompany_kt'] += 0
+                                objTotal['details']['bi_bpjs_kt'] += ele.potongan_nilai    
+                                objTotal['details']['hutang_bpjs_kt'] += 0
                             } 
                         }
                     } else {
@@ -596,31 +596,31 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
                             
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
+                                objTotal['details']['bi_bpjs_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
+                                objTotal['details']['bi_bpjs_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } 
 
                         } else {
                             objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += parseFloat(ele.pemot_byr_karyawan)    
+                                objTotal['details']['bi_bpjs_ks'] += parseFloat(ele.pemot_byr_karyawan)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += parseFloat(ele.pemot_byr_karyawan)
+                                objTotal['details']['bi_bpjs_kt'] += parseFloat(ele.pemot_byr_karyawan)
                             } 
                         }
 
                         if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_company) != 0) {
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiCompany_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_company) / 100    
+                                objTotal['details']['hutang_bpjs_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_company) / 100    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiCompany_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_company) / 100    
+                                objTotal['details']['hutang_bpjs_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_company) / 100    
                             }
                         } else {
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiCompany_ks'] += parseFloat(ele.pemot_byr_company)    
+                                objTotal['details']['hutang_bpjs_ks'] += parseFloat(ele.pemot_byr_company)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiCompany_kt'] += parseFloat(ele.pemot_byr_company)    
+                                objTotal['details']['hutang_bpjs_kt'] += parseFloat(ele.pemot_byr_company)    
                             }
                         }
                     }
@@ -631,21 +631,21 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100   
                             
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.potongan_nilai) / 100    
-                                objTotal['details']['asuransiCompany_ks'] += 0
+                                objTotal['details']['bi_bpjs_ks'] += byrBpjsKesehatan * parseFloat(ele.potongan_nilai) / 100    
+                                objTotal['details']['hutang_bpjs_ks'] += 0
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100    
-                                objTotal['details']['asuransiCompany_kt'] += 0
+                                objTotal['details']['bi_bpjs_kt'] += ele.ebsal_basic_salary * parseFloat(ele.potongan_nilai) / 100    
+                                objTotal['details']['hutang_bpjs_kt'] += 0
                             } 
                         } else {
                             objDetail['debit'] = ele.potongan_nilai;
 
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += ele.potongan_nilai  
-                                objTotal['details']['asuransiCompany_ks'] += 0
+                                objTotal['details']['bi_bpjs_ks'] += ele.potongan_nilai  
+                                objTotal['details']['hutang_bpjs_ks'] += 0
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += ele.potongan_nilai  
-                                objTotal['details']['asuransiCompany_kt'] += 0
+                                objTotal['details']['bi_bpjs_kt'] += ele.potongan_nilai  
+                                objTotal['details']['hutang_bpjs_kt'] += 0
                             } 
                         }
                     } else {
@@ -653,32 +653,32 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                             objDetail['debit'] = ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100
 
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
+                                objTotal['details']['bi_bpjs_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
+                                objTotal['details']['bi_bpjs_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_karyawan) / 100    
                             } 
 
                         } else {
                             objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
 
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiKaryawan_ks'] += parseFloat(ele.pemot_byr_karyawan)    
+                                objTotal['details']['bi_bpjs_ks'] += parseFloat(ele.pemot_byr_karyawan)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiKaryawan_kt'] += parseFloat(ele.pemot_byr_karyawan)    
+                                objTotal['details']['bi_bpjs_kt'] += parseFloat(ele.pemot_byr_karyawan)    
                             }
                         }
 
                         if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_company) != 0) {
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiCompany_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_company) / 100    
+                                objTotal['details']['hutang_bpjs_ks'] += byrBpjsKesehatan * parseFloat(ele.pemot_byr_company) / 100    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiCompany_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_company) / 100    
+                                objTotal['details']['hutang_bpjs_kt'] += ele.ebsal_basic_salary * parseFloat(ele.pemot_byr_company) / 100    
                             }
                         } else {
                             if (ele.pemot_group == 1) {
-                                objTotal['details']['asuransiCompany_ks'] += parseFloat(ele.pemot_byr_company)    
+                                objTotal['details']['hutang_bpjs_ks'] += parseFloat(ele.pemot_byr_company)    
                             } else if (ele.pemot_group == 2) {
-                                objTotal['details']['asuransiCompany_kt'] += parseFloat(ele.pemot_byr_company)    
+                                objTotal['details']['hutang_bpjs_kt'] += parseFloat(ele.pemot_byr_company)    
                             }
                         }
                     }
@@ -713,7 +713,7 @@ report.getPayrollForJurnal =  async (req, res, next) => {
                     empKasbonTemp.push(ele.kasbonEmp)
                     
                     objTotal['details']['emp']['kasbon'].push(ele)
-                    objTotal['details']['totalBayarKasbon'] += parseFloat(ele.bayarKasJumlah)
+                    objTotal['details']['total_pinjaman_karyawan'] += parseFloat(ele.bayarKasJumlah)
                 }
             }
         });
@@ -762,24 +762,27 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             }
         }
 
-        const pembAsuransiKaryawan_ks = Math.round(objTotal['details']['asuransiKaryawan_ks'] / 1000) * 1000
-        const pembAsuransiCompany_ks = Math.round(objTotal['details']['asuransiCompany_ks'] / 1000) * 1000
-        const pembAsuransiKaryawan_kt = Math.round(objTotal['details']['asuransiKaryawan_kt'] / 1000) * 1000
-        const pembAsuransiCompany_kt = Math.round(objTotal['details']['asuransiCompany_kt'] / 1000) * 1000
-        const pembKaryawan_pajak = Math.round(objTotal['details']['pajakKaryawan'] / 1000) * 1000
-        const pembCompany_pajak = Math.round(objTotal['details']['pajakCompany'] / 1000) * 1000
-        const pembGajiNett = objTotal['details']['gajiBruto'] - (pembAsuransiKaryawan_ks + pembAsuransiKaryawan_kt + pembKaryawan_pajak + objTotal['details']['totalBayarKasbon'])
-        const tanpaPembGajiNett = objTotal['details']['gajiBruto'] - (objTotal['details']['asuransiKaryawan_ks'] + objTotal['details']['asuransiKaryawan_kt'] + objTotal['details']['pajakKaryawan'] + objTotal['details']['totalBayarKasbon'])
+        const pembAsuransiKaryawan_ks = Math.round(objTotal['details']['bi_bpjs_ks'] / 1000) * 1000
+        const pembAsuransiCompany_ks = Math.round(objTotal['details']['hutang_bpjs_ks'] / 1000) * 1000
+        const pembAsuransiKaryawan_kt = Math.round(objTotal['details']['bi_bpjs_kt'] / 1000) * 1000
+        const pembAsuransiCompany_kt = Math.round(objTotal['details']['hutang_bpjs_kt'] / 1000) * 1000
+        const pembKaryawan_pajak = Math.round(objTotal['details']['bi_pph21'] / 1000) * 1000
+        const pembCompany_pajak = Math.round(objTotal['details']['hutang_pph21'] / 1000) * 1000
+        const pembGajiNett = objTotal['details']['gajiBruto'] - (pembAsuransiKaryawan_ks + pembAsuransiKaryawan_kt + pembKaryawan_pajak + objTotal['details']['total_pinjaman_karyawan'])
+        const tanpaPembGajiNett = objTotal['details']['gajiBruto'] - (objTotal['details']['bi_bpjs_ks'] + objTotal['details']['bi_bpjs_kt'] + objTotal['details']['bi_pph21'] + objTotal['details']['total_pinjaman_karyawan'])
         
         objTotal['details']['pembulatan'] = Math.round(pembGajiNett - tanpaPembGajiNett)
         
+        if (objTotal['details']['pembulatan'] < 0) {
+            objTotal['details']['pembulatan'] = 0
+        }
         objTotal['details']['gajiNett'] = Math.round(pembGajiNett / 1000) * 1000
-        objTotal['details']['asuransiKaryawan_ks'] = pembAsuransiKaryawan_ks
-        objTotal['details']['asuransiCompany_ks'] = pembAsuransiCompany_ks
-        objTotal['details']['asuransiKaryawan_kt'] = pembAsuransiKaryawan_kt
-        objTotal['details']['asuransiCompany_kt'] = pembAsuransiCompany_kt
-        objTotal['details']['pajakKaryawan'] = pembKaryawan_pajak
-        objTotal['details']['pajakCompany'] = pembCompany_pajak
+        objTotal['details']['bi_bpjs_ks'] = pembAsuransiKaryawan_ks
+        objTotal['details']['hutang_bpjs_ks'] = pembAsuransiCompany_ks
+        objTotal['details']['bi_bpjs_kt'] = pembAsuransiKaryawan_kt
+        objTotal['details']['hutang_bpjs_kt'] = pembAsuransiCompany_kt
+        objTotal['details']['bi_pph21'] = pembKaryawan_pajak
+        objTotal['details']['hutang_pph21'] = pembCompany_pajak
 
         getData.data = objTotal
 
