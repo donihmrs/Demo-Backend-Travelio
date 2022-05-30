@@ -992,23 +992,41 @@ karyawan.absenFinger = async (req, res, next) => {
                 if (getWorkshiftEmp.status === 200) {
                     for (const key in getWorkshiftEmp.data) {
                         if (Object.hasOwnProperty.call(getWorkshiftEmp.data, key)) {
-                            const ele = getWorkshiftEmp.data[key];
-                            if (getIdEmp.emp_number === ele.id_emp) {
-                                if (tempEmpLembur[ele.id_emp] === undefined) {
-                                    tempEmpLembur[ele.id_emp] = []
-                                    tempEmpLembur[ele.id_emp].push(data['date'])
+                            const eleWork = getWorkshiftEmp.data[key];
+                            if (getIdEmp.emp_number === eleWork.id_emp) {
+                                if (tempEmpLembur[eleWork.id_emp] === undefined) {
+                                    tempEmpLembur[eleWork.id_emp] = []
+                                    tempEmpLembur[eleWork.id_emp].push(data['date'])
                                 } else {
                                     if (statusAbsen === '1') {
                                         const dateMinus = new Date(data['date'])
                                         const dateConvertDb = lib.formatDateDb(dateMinus.minDays(1))
 
-                                        if (!tempEmpLembur[ele.id_emp].includes(data['date'])) {
+                                        if (!tempEmpLembur[eleWork.id_emp].includes(data['date'])) {
                                             data['date'] = dateConvertDb
+                                            
+                                            const epocEndTime = Math.floor(new Date(dateConvertDb +' '+ getWorkshift.data.endTime).getTime() / 1000)
+                                            const epocEleTime = Math.floor(new Date(dateConvertDb +' '+ ele.time).getTime() / 1000)
+
+                                            if (epocEndTime < epocEleTime) {
+                                                data['note'] = "Lembur Pulang"
+                                            } else {
+                                                data['note'] = "Pulang Lebih Awal"
+                                            }
                                         }
 
-                                        tempEmpLembur[ele.id_emp] = []
+                                        tempEmpLembur[eleWork.id_emp] = []
                                     } else {
-                                        tempEmpLembur[ele.id_emp].push(data['date'])
+                                        tempEmpLembur[eleWork.id_emp].push(data['date'])
+
+                                        const epocStartTime = Math.floor(new Date(eleWork.date +' '+ getWorkshift.data.startTime).getTime() / 1000)
+                                        const epocEleTime = Math.floor(new Date(eleWork.date +' '+ eleWork.time).getTime() / 1000)
+                                        
+                                        if (epocStartTime < epocEleTime) {
+                                            data['note'] = "Terlambat"
+                                        } else {
+                                            data['note'] = "-"
+                                        }
                                     }
                                 }
                             }
@@ -1032,7 +1050,10 @@ karyawan.absenFinger = async (req, res, next) => {
                                         data['note'] = "-"
                                     }
                                 } else {
-                                    if (timeWork.endTime < ele.time) {
+                                    const epocEndTime = Math.floor(new Date(ele.date +' '+ timeWork.endTime).getTime() / 1000)
+                                    const epocEleTime = Math.floor(new Date(ele.date +' '+ ele.time).getTime() / 1000)
+
+                                    if (epocEndTime < epocEleTime) {
                                         data['note'] = "Lembur Pulang"
                                     } else {
                                         data['note'] = "Pulang Lebih Awal"

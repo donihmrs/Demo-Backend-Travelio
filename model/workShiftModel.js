@@ -7,7 +7,7 @@ const workShiftModel = {}
 
 workShiftModel.getShiftChangeDay = async (data) => {
     const conn = await mysqlConf.conn(data.database);
-    return await conn.promise().execute("SELECT id as id_workshift FROM ohrm_work_shift WHERE start_time > end_time LIMIT 1;")
+    return await conn.promise().execute("SELECT id as id_workshift, start_time as startTime , end_time as endTime FROM ohrm_work_shift WHERE start_time > end_time LIMIT 1;")
             .then(([rows, fields]) => {
                 if (rows.length > 0) {
                     console.log("Berhasil get workshift")
