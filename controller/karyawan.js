@@ -918,6 +918,12 @@ karyawan.importAllEmp = async (req, res, next) => {
 
 karyawan.absenFinger = async (req, res, next) => {
     try {
+
+        Date.prototype.minDays = function(days) {
+            this.setDate(this.getDate() - days);
+            return this;
+        }
+
         let tempArr = {}
         tempArr['database'] = req.body.database
         tempArr['form'] = []
@@ -935,9 +941,27 @@ karyawan.absenFinger = async (req, res, next) => {
 
         const getWorkshiftEmp = await workShiftModel.getShiftWorkEmpChangeDay(dataWorkshift)
 
-        Date.prototype.minDays = function(days) {
-            this.setDate(this.getDate() - days);
-            return this;
+        const getWorkshiftRegular = await workShiftModel.getShiftRegular(dataWorkshift);
+
+        let idEmpWorkshiftRegular = null;
+        if (getWorkshiftRegular.status == 200) {
+            let arrIdWorkshift = []
+            for (const key in getWorkshiftRegular.data) {
+                if (Object.hasOwnProperty.call(getWorkshiftRegular.data, key)) {
+                    const ele = getWorkshiftRegular.data[key];
+                    arrIdWorkshift.push(ele.id_workshift)
+                }
+            }
+
+            const getIdWorkShift = arrIdWorkshift.join();
+            
+            dataWorkshift['idArr'] = getIdWorkShift
+
+            const getEmpWorkShiftRegular = await workShiftModel.getShiftWorkEmpRegular(dataWorkshift)
+        
+            if (getEmpWorkShiftRegular.status == 200) {
+                idEmpWorkshiftRegular = getEmpWorkShiftRegular.data
+            }
         }
 
         let tempEmpLembur = {}
@@ -950,6 +974,8 @@ karyawan.absenFinger = async (req, res, next) => {
             data['datetime'] = ele.datetime
             data['date'] = ele.date
             data['dateUtc'] = lib.convertUtc0(ele.datetime)
+            data['verify'] = ele.verify
+            data['note'] = ""
 
             const getIdEmp = getDataEmp.data.find(x => x.employee_id === ele.id);
 
@@ -990,13 +1016,40 @@ karyawan.absenFinger = async (req, res, next) => {
                     }
                 }
 
+                if (idEmpWorkshiftRegular !== null) {
+                    for (const keyWork in idEmpWorkshiftRegular) {
+                        if (Object.hasOwnProperty.call(idEmpWorkshiftRegular, keyWork)) {
+                            const eleWork = idEmpWorkshiftRegular[keyWork];
+                            if (getIdEmp.emp_number === eleWork.id_emp) {
+                                const timeWork = getWorkshiftRegular.data.find(x => x.id_workshift === eleWork.id_work);
+                                if (statusAbsen == '0') {
+                                    const epocStartTime = Math.floor(new Date(ele.date +' '+ timeWork.startTime).getTime() / 1000)
+                                    const epocEleTime = Math.floor(new Date(ele.date +' '+ ele.time).getTime() / 1000)
+                                    
+                                    if (epocStartTime < epocEleTime) {
+                                        data['note'] = "Terlambat"
+                                    } else {
+                                        data['note'] = "-"
+                                    }
+                                } else {
+                                    if (timeWork.endTime < ele.time) {
+                                        data['note'] = "Lembur Pulang"
+                                    } else {
+                                        data['note'] = "Pulang Lebih Awal"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (statusAbsen == '0') {
                     data['status'] = "PUNCHED IN"                
                 } else {
                     data['status'] = "PUNCHED OUT"
                 }
 
-                const arr = [data.idEmp, data.date, data.dateUtc, data.offset, data.datetime,data.status]
+                const arr = [data.idEmp, data.date, data.dateUtc, data.note,data.offset, data.datetime,data.status, data.verify]
 
                 tempArr['form'].push(arr)
             }
