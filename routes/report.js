@@ -21,4 +21,8 @@ router.get('/getAbsensi', function(req, res, next) {
     report.getAbsensi(req,res,next)
 });
 
+router.get('/getAbsensiTable', function(req, res, next) {
+    report.getAbsensiTable(req,res,next)
+});
+
 module.exports = router;

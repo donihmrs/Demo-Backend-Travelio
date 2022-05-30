@@ -63,7 +63,7 @@ absensiModel.holidayAbsensi = async (data) => {
 absensiModel.report = async (data) => {
     const conn = await mysqlConf.conn(data.database);
 
-    const sql = "SELECT concat(emp.emp_firstname, ' ',emp.emp_middle_name, ' ',emp.emp_lastname) AS fullName,"+
+    const sql = "SELECT emp_number as idEmp, concat(emp.emp_firstname, ' ',emp.emp_middle_name, ' ',emp.emp_lastname) AS fullName,"+
     " record.punch_in_user_time AS inTime, record.punch_out_user_time AS outTime, record.punch_in_time_offset AS inOffset, record.punch_out_time_offset AS outOffset"+
     " FROM hs_hr_employee AS emp LEFT JOIN `ohrm_attendance_record` AS record ON record.employee_id = emp.emp_number "+
     " WHERE record.punch_date BETWEEN '"+data.dateStart+"' AND '"+data.dateEnd+"'";
