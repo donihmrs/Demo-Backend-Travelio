@@ -472,10 +472,10 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         objTotal['details']['emp'] = {}
 
         objTotal['keterangan'] = {}
-        objTotal['keterangan']['bi_bpjs_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Karyawan"
-        objTotal['keterangan']['bi_bpjs_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Karyawan"
-        objTotal['keterangan']['hutang_bpjs_ks'] = "Total Biaya Asuransi Kesehatan Yang Ditanggung Perusahaan"
-        objTotal['keterangan']['hutang_bpjs_kt'] = "Total Biaya Asuransi Ketenagakerjaan Yang Ditanggung Perusahaan"
+        objTotal['keterangan']['bi_bpjs_ks'] = "Biaya BPJS Kesehatan"
+        objTotal['keterangan']['bi_bpjs_kt'] = "Biaya BPJS Ketenagakerjaan"
+        objTotal['keterangan']['hutang_bpjs_ks'] = "Hutang BPJS Kesehatan"
+        objTotal['keterangan']['hutang_bpjs_kt'] = "Hutang BPJS Ketenagakerjaan"
         objTotal['keterangan']['bi_pph21'] = "Total Biaya Pajak Yang Ditanggung Karyawan"
         objTotal['keterangan']['hutang_pph21'] = "Total Biaya Pajak Yang Ditanggung Perusahaan"
         objTotal['keterangan']['pembulatan'] = "Total Pembulatan"
