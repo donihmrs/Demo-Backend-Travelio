@@ -1080,9 +1080,9 @@ report.getAbsensi =  async (req, res, next) => {
                 const resDateIn = Date.parse(new Date(ele.inTime));
                 const resDateOut = Date.parse(new Date(ele.outTime));
                 const diffTime = resDateOut - resDateIn
-                
+ 
                 const getDiffTime = new Date(diffTime)
-                const hourDiffTime = getDiffTime.getHours()+"."+getDiffTime.getMinutes()
+                const hourDiffTime = moment.utc(getDiffTime).format("HH.mm")
                 const dateHeader = moment.tz(ele.inTime, process.env.TIMEZONE).format("MMM DD")
 
                 tempArrData.forEach(eleArr => {
@@ -1166,8 +1166,8 @@ report.getAbsensiTable =  async (req, res, next) => {
                 arrDate.push(dateHeader)
             }
 
-            if (!arrName.includes(ele.fullName)) {
-                arrName.push(ele.fullName)
+            if (!arrName.includes(ele.idEmp)) {
+                arrName.push(ele.idEmp)
             }
         }
     }
@@ -1190,12 +1190,11 @@ report.getAbsensiTable =  async (req, res, next) => {
 
     arrName.forEach(name => {
         let dataArr = {}
-        dataArr['nama'] = name
+        dataArr['id'] = name
         arrDate.forEach(date => {
             dataArr[date.replace(" ","_")] = null
         });
 
-        dataArr['total_waktu'] = 0
         dataArr['hari_kerja'] = 0
 
         tempArrData.push(dataArr)
@@ -1210,11 +1209,11 @@ report.getAbsensiTable =  async (req, res, next) => {
                 const diffTime = resDateOut - resDateIn
                 
                 const getDiffTime = new Date(diffTime)
-                const hourDiffTime = getDiffTime.getHours()+"."+getDiffTime.getMinutes()
+                const hourDiffTime = moment.utc(getDiffTime).format("HH.mm")
                 const dateHeader = moment.tz(ele.inTime, process.env.TIMEZONE).format("MMM DD")
 
                 tempArrData.forEach(eleArr => {
-                    if (eleArr["nama"] === ele.fullName) {
+                    if (eleArr["id"] === ele.idEmp) {
                         eleArr[dateHeader.replace(" ","_")] = hourDiffTime
                     }
                 });
@@ -1228,10 +1227,10 @@ report.getAbsensiTable =  async (req, res, next) => {
             for (const key1 in ele) {
                 if (Object.hasOwnProperty.call(ele, key1)) {
                     const data = ele[key1];
-                    if (key1 !== "nama" && key1 !== "hari_kerja" && key1 !== "total_waktu") {
+                    if (key1 !== "id" && key1 !== "hari_kerja" && key1 !== "total_waktu") {
                         if (data !== null) {
                             ele["hari_kerja"]++
-                            ele["total_waktu"] += parseFloat(data)
+                            // ele["total_waktu"] += parseFloat(data)
                         } else {
                             ele[key1] = 0
                         }
