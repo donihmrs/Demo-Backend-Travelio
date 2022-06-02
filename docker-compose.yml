@@ -1,5 +1,5 @@
 web:
-    image: node:erpbe
+    image: node:betravelio
     env_file: .env
     ports:
         - "3333:3333"

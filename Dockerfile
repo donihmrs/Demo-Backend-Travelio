@@ -11,4 +11,4 @@ RUN npm install
 EXPOSE 3333
 
 CMD ["node","index.js"]
-#docker build -t node:erpbe .
+#docker build -t node:betravelio .

@@ -11,15 +11,13 @@ const credentials = {key: privateKey, cert: certificate};
 
 const express = require('express')
 const cors = require('cors')
-const helmet = require('helmet')
 const RateLimit = require('express-rate-limit');
-const logger = require('morgan');
 const path = require('path');
 const appDir = path.dirname(require.main.filename);
-const token = require(appDir+'/controller/token')
 const { match } = require('node-match-path')
+const bodyParser = require('body-parser');
 
-const limiter = new RateLimit({
+const limiter = RateLimit({
     windowMs: 1*60*1000, // 1 minutes 
     max: 100, // limit setiap IP selama windowMs
     delayMs: 0, // tidak ada delay, sampai batas maksimal request (MAX)
@@ -71,32 +69,17 @@ const corsOptions = {
 }
 
 const app = express();
-app.use(logger('dev'));
-app.use(express.json({limit: "50mb"}));
-app.use(express.urlencoded({limit: "50mb",extended:true}))
-app.use(helmet())
-// app.use(limiter)
+app.use(bodyParser.json())
+app.use(limiter)
 app.use(cors(corsOptions))
 app.disable('x-powered-by')
 
 // app.set('views', path.join(__dirname, 'views'));
 // app.set('view engine', 'jade');
 
-const indexRouter = require(appDir+'/routes/index');
-const confRouter = require(appDir+'/routes/conf');
-const tokenRouter = require(appDir+'/routes/token');
-const karyawanRouter = require(appDir+'/routes/karyawan');
-const settingRouter = require(appDir+'/routes/setting');
-const reportRouter = require(appDir+'/routes/report');
-const authRouter = require(appDir+'/routes/auth');
+const bookRoter = require(appDir+'/routes/book');
 
-app.use('/', indexRouter);
-app.use('/conf', confRouter);
-app.use('/token', tokenRouter);
-app.use('/karyawan', karyawanRouter);
-app.use('/setting', settingRouter);
-app.use('/report', reportRouter);
-app.use('/auth', authRouter);
+app.use('/', bookRoter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
