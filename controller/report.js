@@ -777,12 +777,19 @@ report.getPayrollForJurnal =  async (req, res, next) => {
             objTotal['details']['pembulatan'] = 0
         }
         objTotal['details']['gajiNett'] = Math.round(pembGajiNett / 1000) * 1000
-        objTotal['details']['bi_bpjs_ks'] = pembAsuransiKaryawan_ks
-        objTotal['details']['hutang_bpjs_ks'] = pembAsuransiCompany_ks
-        objTotal['details']['bi_bpjs_kt'] = pembAsuransiKaryawan_kt
-        objTotal['details']['hutang_bpjs_kt'] = pembAsuransiCompany_kt
-        objTotal['details']['bi_pph21'] = pembKaryawan_pajak
-        objTotal['details']['hutang_pph21'] = pembCompany_pajak
+        // objTotal['details']['bi_bpjs_ks'] = pembAsuransiKaryawan_ks
+        // objTotal['details']['hutang_bpjs_ks'] = pembAsuransiCompany_ks
+        // objTotal['details']['bi_bpjs_kt'] = pembAsuransiKaryawan_kt
+        // objTotal['details']['hutang_bpjs_kt'] = pembAsuransiCompany_kt
+        // objTotal['details']['bi_pph21'] = pembKaryawan_pajak
+        // objTotal['details']['hutang_pph21'] = pembCompany_pajak
+
+        objTotal['details']['bi_bpjs_ks'] = pembAsuransiCompany_ks
+        objTotal['details']['hutang_bpjs_ks'] = pembAsuransiCompany_ks + pembAsuransiKaryawan_ks
+        objTotal['details']['bi_bpjs_kt'] = pembAsuransiCompany_kt
+        objTotal['details']['hutang_bpjs_kt'] = pembAsuransiCompany_kt + pembAsuransiKaryawan_kt
+        objTotal['details']['bi_pph21'] = pembCompany_pajak
+        objTotal['details']['hutang_pph21'] = pembCompany_pajak + pembKaryawan_pajak
 
         getData.data = objTotal
 
