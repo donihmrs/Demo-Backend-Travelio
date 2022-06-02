@@ -796,6 +796,369 @@ report.getPayrollForJurnal =  async (req, res, next) => {
     }
 }
 
+report.getPayrollExportDetail =  async (req, res, next) => {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+    const db = req.query.database
+    const bulan = req.query.bulan
+    const tahun = req.query.tahun
+    const emp = req.query.emp
+
+    let data = {} 
+    data['database'] = db
+    data['bulan'] = lib.dateMonth(bulan)
+    data['tahun'] = tahun
+    data['emp'] = emp
+
+    // const dataHoliday = await absensiModel.holiday(data)
+
+    const getKasbon = await kasbonModel.getAllRincianEmp(data)
+    let dataKasbon = []
+
+    if (getKasbon.data.length > 0) {
+        dataKasbon = getKasbon.data
+    }
+
+    const getPtkp = await reportModel.ptkp(data)
+    const dataPtkp = getPtkp.data
+
+    const getTarif = await tarifModel.getAll(data)
+    
+    let gajiEmp = {}
+    let dataBpjsKs = {}
+    
+    if (getTarif != 200 && getTarif.data.length == 0) {
+        res.status(400).send(getTarif)
+    }
+
+    const dataTarif = getTarif.data
+
+    if (getPtkp.status != 200 && getPtkp.data.length == 0) {
+        res.status(400).send(getPtkp)
+    } else {
+
+        for (const key in dataTarif) {
+            if (Object.hasOwnProperty.call(dataTarif, key)) {
+                const ele = dataTarif[key];
+                
+                if (ele.tarifRangeId === 1) {
+                    dataBpjsKs = ele
+    
+                    break;
+                }
+            }
+        }
+        
+        for (const key in dataPtkp) {
+            if (Object.hasOwnProperty.call(dataPtkp, key)) {
+                const ele = dataPtkp[key];
+                if (gajiEmp[ele.emp_number] == undefined) {
+                    gajiEmp[ele.emp_number] = {}
+                    gajiEmp[ele.emp_number]['gajiEmp'] = parseFloat(ele.ebsal_basic_salary)
+                } else {
+                    gajiEmp[ele.emp_number]['gajiEmp'] += parseFloat(ele.ebsal_basic_salary) 
+                }
+            }
+        }
+
+        let tempPtkp = {}
+        for (const key in dataPtkp) {
+            if (Object.hasOwnProperty.call(dataPtkp, key)) {
+                const ele = dataPtkp[key];
+                if (tempPtkp[ele.emp_number] == undefined) {
+                    tempPtkp[ele.emp_number] = {}
+                    dataPtkp[key]['ebsal_basic_salary'] = gajiEmp[ele.emp_number]['gajiEmp']
+                } else {
+                    delete dataPtkp[key]
+                }
+            }
+        }
+
+        let ptkpObj = {}
+        
+        //Hitung pajak
+        for (const key in dataPtkp) {
+            if (Object.hasOwnProperty.call(dataPtkp, key)) {
+                const ele = dataPtkp[key];
+                if (ptkpObj[ele.emp_number] == undefined) {
+                    ptkpObj[ele.emp_number] = {}
+                    ptkpObj[ele.emp_number]['emp_firstname'] = ele.emp_firstname
+                    ptkpObj[ele.emp_number]['emp_lastname'] = ele.emp_lastname
+                    ptkpObj[ele.emp_number]['emp_middle_name'] = ele.emp_middle_name
+                    ptkpObj[ele.emp_number]['ebsal_basic_salary'] = ele.ebsal_basic_salary
+                    ptkpObj[ele.emp_number]['salary_component'] = ele.salary_component
+
+                    ptkpObj[ele.emp_number]['pajak'] = {}
+                    ptkpObj[ele.emp_number]['pajak']['inisial_ptkp'] = ele.inisial_ptkp
+
+                    const totalGajiSetahun = ele.ebsal_basic_salary * 12
+
+                    ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] = 0
+                    ptkpObj[ele.emp_number]['pajak']['pph21Company'] = 0
+
+                    await dataTarif.forEach(eleTarif => {
+                        if (eleTarif.tarifRangeId !== 1) {
+                            if (totalGajiSetahun >= parseFloat(ele.nilai_setahun_ptkp)) {
+                                let byrJabatan = totalGajiSetahun * 5 /100
+                                if (byrJabatan > 6000000) {
+                                    byrJabatan = 6000000
+                                }
+        
+                                const gajiKurangJabatan = totalGajiSetahun - byrJabatan
+                                let tarifMin = parseFloat(eleTarif.tarif_min)
+
+                                if (parseFloat(eleTarif.tarif_min) !== 0) {
+                                    tarifMin = parseFloat(eleTarif.tarif_min) - 1
+                                }
+                                
+                                const gajiKurangPtkp = (gajiKurangJabatan - parseFloat(ele.nilai_setahun_ptkp))
+
+                                if (eleTarif.tarif_group === 2 && eleTarif.tarif_type === "%") {
+                                    if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_min)) {
+                                        const persenPtkp = parseFloat(eleTarif.tarif_val_max)
+                                        let byrPph = ((parseFloat(gajiKurangPtkp) - tarifMin) * persenPtkp / 100) / 12
+                                        
+                                        let byrPphMax = 0
+                                        if (gajiKurangPtkp >= parseFloat(eleTarif.tarif_max)) {
+                                            byrPphMax = ((parseFloat(eleTarif.tarif_max) - tarifMin) * persenPtkp / 100) / 12 
+
+                                            byrPph = byrPphMax
+                                        }
+
+                                        if (ptkpObj[ele.emp_number]['pajak'][eleTarif.tarif_name] === undefined) {
+                                            ptkpObj[ele.emp_number]['pajak'][eleTarif.tarif_name] = {}
+                                            ptkpObj[ele.emp_number]['pajak'][eleTarif.tarif_name]['karyawan'] = Math.round((byrPph * parseFloat(ele.byr_karyawan_ptkp) / 5))
+                                            ptkpObj[ele.emp_number]['pajak'][eleTarif.tarif_name]['company'] = Math.round((byrPph * parseFloat(ele.byr_company_ptkp) / 5)) 
+                                        }
+                                        
+                                        ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] += Math.round((byrPph * parseFloat(ele.byr_karyawan_ptkp) / 5))
+                                        ptkpObj[ele.emp_number]['pajak']['pph21Company'] += Math.round((byrPph * parseFloat(ele.byr_company_ptkp) / 5))
+                                    }
+                                }
+                            } else {
+                                ptkpObj[ele.emp_number]['pajak']['limaPersen'] = 0
+                                ptkpObj[ele.emp_number]['pajak']['limaPersenTahun'] = 0
+                                ptkpObj[ele.emp_number]['pajak']['pph21Karyawan'] = 0
+                                ptkpObj[ele.emp_number]['pajak']['pph21Company'] = 0
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        const getData = await reportModel.payroll(data)
+        let resObj = {}
+
+        let allGaji = 0
+        let allPemotongan = 0
+        let allCompany = 0
+        let flagNotPotong = 0
+
+        if (getData.status == 200 && getData.data.length > 0) {
+            await getData.data.forEach(ele => {
+                flagNotPotong = 0
+
+                if (resObj[ele.emp_number] == undefined) {
+                    resObj[ele.emp_number] = {}
+                    resObj[ele.emp_number]['kasbon'] = []
+                    resObj[ele.emp_number]['gajiBersih'] = parseFloat(ele.ebsal_basic_salary)
+                    resObj[ele.emp_number]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                    resObj[ele.emp_number]['namaSalary'] = ele.salary_component
+                    resObj[ele.emp_number]['pemotongan'] = []
+
+                    resObj[ele.emp_number]['totalPotongan'] = 0
+                    resObj[ele.emp_number]['companyPotongan'] = 0
+                    resObj[ele.emp_number]['pembulatan'] = 0
+                    resObj[ele.emp_number]['gajiNett'] = parseFloat(ele.ebsal_basic_salary)
+                    resObj[ele.emp_number]['gajiNettStatic'] = parseFloat(ele.ebsal_basic_salary)
+
+                    allGaji += parseFloat(ele.ebsal_basic_salary)
+
+                    const objDetail = {}
+                    
+                    if (ele.potongan_nilai != 0) {
+                        if (ele.pemot_type == "%") {     
+                            objDetail['debit'] = Math.round(convertBpjsKsRange(ele,dataBpjsKs) * ele.potongan_nilai / 100)                 
+                            objDetail['company'] = 0
+                        } else {
+                            objDetail['debit'] = ele.potongan_nilai;
+                            objDetail['company'] = 0
+                        } 
+                    } else {
+                        if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_karyawan) != 0) {
+                            objDetail['debit'] = Math.round(convertBpjsKsRange(ele,dataBpjsKs) * parseFloat(ele.pemot_byr_karyawan) / 100)
+                        } else {
+                            objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
+                        }
+
+                        if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_company) != 0) {
+                            objDetail['company'] = Math.round(convertBpjsKsRange(ele,dataBpjsKs) * parseFloat(ele.pemot_byr_company) / 100)
+                        } else {
+                            objDetail['company'] = parseFloat(ele.pemot_byr_company)
+                        }
+                    }
+
+                    resObj[ele.emp_number]['totalPotongan'] += objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
+                    resObj[ele.emp_number]['gajiNett'] -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
+                    resObj[ele.emp_number]['companyPotongan'] += objDetail['company'] + ptkpObj[ele.emp_number]['pajak']['pph21Company']
+                    resObj[ele.emp_number]['gajiNettStatic'] -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
+                    
+                    const pembulatanGaji = Math.round(resObj[ele.emp_number]['gajiNettStatic'] / 1000) * 1000 
+                    const gajiTanpaPembulatan = Math.round(resObj[ele.emp_number]['gajiNettStatic'])
+
+                    resObj[ele.emp_number]['gajiNett'] = pembulatanGaji
+                    
+                    if (resObj[ele.emp_number]['pembulatan'] === 0) {
+                        resObj[ele.emp_number]['pembulatan'] = pembulatanGaji  - gajiTanpaPembulatan
+                    }
+
+                    allGaji -= objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
+                    allPemotongan += objDetail['debit'] + ptkpObj[ele.emp_number]['pajak']['pph21Karyawan']
+                    allCompany += objDetail['company'] + ptkpObj[ele.emp_number]['pajak']['pph21Company']
+
+                    objDetail['namaPemotongan'] = ele.pemot_nama
+                    objDetail['potongKeterangan'] = ele.emp_potong_keterangan
+                    
+                    resObj[ele.emp_number]['pemotongan'].push(objDetail)
+                } else {
+                    const objDetail = {}
+                    
+                    if (ele.potongan_nilai != 0) {
+                        if (ele.pemot_type == "%") {
+                            objDetail['debit'] = Math.round(convertBpjsKsRange(ele,dataBpjsKs) * ele.potongan_nilai / 100)                    
+                            objDetail['company'] = 0
+                        } else {
+                            objDetail['debit'] = ele.potongan_nilai;
+                            objDetail['company'] = 0
+                        }
+                    } else {
+                        if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_karyawan) != 0) {
+                            objDetail['debit'] = Math.round(convertBpjsKsRange(ele,dataBpjsKs) * parseFloat(ele.pemot_byr_karyawan) / 100)
+                        } else {
+                            objDetail['debit'] = parseFloat(ele.pemot_byr_karyawan)
+                        }
+
+                        if (ele.pemot_type == "%" && parseFloat(ele.pemot_byr_company) != 0) {
+                            objDetail['company'] = Math.round(convertBpjsKsRange(ele,dataBpjsKs) * parseFloat(ele.pemot_byr_company) / 100)
+                        } else {
+                            objDetail['company'] = parseFloat(ele.pemot_byr_company)
+                        }
+                    }
+
+                    resObj[ele.emp_number]['totalPotongan'] += objDetail['debit']
+                    resObj[ele.emp_number]['gajiNett'] -= objDetail['debit']
+                    resObj[ele.emp_number]['companyPotongan'] += objDetail['company']
+
+                    resObj[ele.emp_number]['gajiNettStatic'] -= objDetail['debit']
+                    
+                    const pembulatanGaji = Math.round(resObj[ele.emp_number]['gajiNettStatic'] / 1000) * 1000 
+                    const gajiTanpaPembulatan = Math.round(resObj[ele.emp_number]['gajiNettStatic'])
+
+                    resObj[ele.emp_number]['gajiNett'] = pembulatanGaji
+                    
+                    resObj[ele.emp_number]['pembulatan'] = pembulatanGaji  - gajiTanpaPembulatan
+
+                    allGaji -= objDetail['debit']
+                    allPemotongan += objDetail['debit']
+                    allCompany += objDetail['company']
+
+                    objDetail['namaPemotongan'] = ele.pemot_nama
+                    objDetail['potongKeterangan'] = ele.emp_potong_keterangan
+                    
+                    resObj[ele.emp_number]['pemotongan'].push(objDetail)
+                }
+            });
+        } 
+
+
+        await dataKasbon.forEach(ele => {
+            if (resObj[ele.kasbonEmp] !== undefined) {
+                if (ele.bayarKasDate !== null) {
+                    const splitKasbonDate = lib.formatDateDb(ele.bayarKasDate)
+                    const kasbonDateMonth = splitKasbonDate.split("-")[1]
+                    const kasbonDateYear = splitKasbonDate.split("-")[0]
+                    if (data['bulan'] === kasbonDateMonth && data['tahun'] === kasbonDateYear) {
+                        flagNotPotong = 0
+
+                        resObj[ele.kasbonEmp]['kasbon'].push(ele)
+                        resObj[ele.kasbonEmp]['totalPotongan'] = resObj[ele.kasbonEmp]['totalPotongan'] + parseFloat(ele.bayarKasJumlah)
+                        allPemotongan += parseFloat(ele.bayarKasJumlah)
+                        allGaji -= parseFloat(ele.bayarKasJumlah)
+                        resObj[ele.kasbonEmp]['gajiNett'] =  Math.round((parseFloat(resObj[ele.kasbonEmp]['gajiNettStatic']) - parseFloat(ele.bayarKasJumlah)) / 1000) * 1000
+                    }
+                }
+            }
+        });
+
+        resObj['allGaji'] = {}
+
+        resObj['allGaji']['nett'] = Math.round(allGaji)
+
+        resObj['allPemotongan'] = allPemotongan
+        resObj['allCompany'] = allCompany
+
+        for (const key in ptkpObj) {
+            if (Object.hasOwnProperty.call(ptkpObj, key)) {
+                const ele = ptkpObj[key];
+                if (resObj[key] == undefined) {
+                    resObj[key] = {}
+                    resObj[key]['gajiBersih'] = ele.ebsal_basic_salary
+                    resObj[key]['namaKaryawan'] = ele.emp_firstname+" "+ele.emp_middle_name+" "+ele.emp_lastname
+                    resObj[key]['namaSalary'] = ele.salary_component
+                    resObj[key]['pemotongan'] = []
+
+                    resObj[key]['totalPotongan'] = ele.pajak.pph21Karyawan
+                    resObj[key]['companyPotongan'] = ele.pajak.pph21Company
+
+                    if (resObj['allGaji']['nett'] === 0) {
+                        flagNotPotong = 1
+                        resObj['allGaji']['pembulatan'] = 0
+                    }
+                    
+                    const pembulatanGaji = Math.round((parseFloat(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan) / 1000) * 1000
+                    const tanpaPembulatanGaji = Math.round(parseFloat(ele.ebsal_basic_salary) - ele.pajak.pph21Karyawan)
+
+                    resObj[key]['gajiNett'] = pembulatanGaji
+                    resObj[key]['gajiNettStatic'] = tanpaPembulatanGaji
+                    resObj[key]['pembulatan'] = pembulatanGaji - tanpaPembulatanGaji
+                    resObj[key]['pajak'] = ele.pajak
+
+                    resObj['allGaji']['nett'] += parseFloat(resObj[key]['gajiNett'])
+                    resObj['allGaji']['pembulatan'] += parseFloat(tanpaPembulatanGaji)
+                    
+                    resObj['allPemotongan'] += ele.pajak.pph21Karyawan
+                    resObj['allCompany'] += ele.pajak.pph21Company
+                } else {
+                    resObj[key]['pajak'] = ele.pajak
+                }
+            }
+        }
+
+        const pembulatanAllGaji =  Math.round(resObj['allGaji']['nett'] / 1000) * 1000
+
+        let pembulatanTanpaAllGaji =  Math.round(resObj['allGaji']['nett'])
+
+        if (flagNotPotong === 1) {
+            flagNotPotong = 0
+            pembulatanTanpaAllGaji = Math.round(resObj['allGaji']['pembulatan'])
+        }
+
+        resObj['allGaji']['nett'] = pembulatanAllGaji
+        resObj['allGaji']['pembulatan'] = pembulatanAllGaji - pembulatanTanpaAllGaji
+
+        getData.data = resObj
+
+        if (Object.keys(getData.data).length === 0) {
+            getData.status = 400
+            getData.message = "Data is empty"
+            res.status(400).send(getData)
+        } else {
+            res.status(200).send(getData)
+        }
+    }
+}
+
 report.getSalaryEmp =  async (req, res, next) => {
     const { isAsuransi, isPajak, isKasbon, database, emp, tanggal} = req.body
 

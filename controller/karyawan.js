@@ -989,11 +989,15 @@ karyawan.absenFinger = async (req, res, next) => {
 
             //Workshift 
             if (data['idEmp'] !== 0) {
+                let flagPulangShiftMalam = 0
+                let flagMasukShiftMalam = 0
+
                 if (getWorkshiftEmp.status === 200) {
                     for (const key in getWorkshiftEmp.data) {
                         if (Object.hasOwnProperty.call(getWorkshiftEmp.data, key)) {
                             const eleWork = getWorkshiftEmp.data[key];
                             if (getIdEmp.emp_number === eleWork.id_emp) {
+                                
                                 if (tempEmpLembur[eleWork.id_emp] === undefined) {
                                     tempEmpLembur[eleWork.id_emp] = []
                                     tempEmpLembur[eleWork.id_emp].push(data['date'])
@@ -1001,17 +1005,20 @@ karyawan.absenFinger = async (req, res, next) => {
                                     if (statusAbsen === '1') {
                                         const dateMinus = new Date(data['date'])
                                         const dateConvertDb = lib.formatDateDb(dateMinus.minDays(1))
-
                                         if (!tempEmpLembur[eleWork.id_emp].includes(data['date'])) {
-                                            data['date'] = dateConvertDb
-                                            
-                                            const epocEndTime = Math.floor(new Date(dateConvertDb +' '+ getWorkshift.data.endTime).getTime() / 1000)
-                                            const epocEleTime = Math.floor(new Date(dateConvertDb +' '+ ele.time).getTime() / 1000)
+                                            if (tempEmpLembur[eleWork.id_emp][0] != data['date'] ) {
+                                                data['date'] = dateConvertDb
+                                                
+                                                const epocEndTime = Math.floor(new Date(dateConvertDb +' '+ getWorkshift.data.endTime).getTime() / 1000)
+                                                const epocEleTime = Math.floor(new Date(dateConvertDb +' '+ ele.time).getTime() / 1000)
 
-                                            if (epocEndTime < epocEleTime) {
-                                                data['note'] = "Lembur Pulang"
-                                            } else {
-                                                data['note'] = "Pulang Lebih Awal"
+                                                if (epocEndTime < epocEleTime) {
+                                                    data['note'] = "Lembur Pulang"
+                                                } else {
+                                                    data['note'] = "Pulang Lebih Awal"
+                                                }
+
+                                                flagPulangShiftMalam = 1
                                             }
                                         }
 
@@ -1027,6 +1034,8 @@ karyawan.absenFinger = async (req, res, next) => {
                                         } else {
                                             data['note'] = "-"
                                         }
+
+                                        flagMasukShiftMalam = 1
                                     }
                                 }
                             }
@@ -1044,19 +1053,24 @@ karyawan.absenFinger = async (req, res, next) => {
                                     const epocStartTime = Math.floor(new Date(ele.date +' '+ timeWork.startTime).getTime() / 1000)
                                     const epocEleTime = Math.floor(new Date(ele.date +' '+ ele.time).getTime() / 1000)
                                     
-                                    if (epocStartTime < epocEleTime) {
-                                        data['note'] = "Terlambat"
-                                    } else {
-                                        data['note'] = "-"
+                                    if (flagMasukShiftMalam === 0) {
+                                        if (epocStartTime < epocEleTime) {
+                                            data['note'] = "Terlambat"
+                                        } else {
+                                            data['note'] = "-"
+                                        }
                                     }
                                 } else {
                                     const epocEndTime = Math.floor(new Date(ele.date +' '+ timeWork.endTime).getTime() / 1000)
                                     const epocEleTime = Math.floor(new Date(ele.date +' '+ ele.time).getTime() / 1000)
 
-                                    if (epocEndTime < epocEleTime) {
-                                        data['note'] = "Lembur Pulang"
-                                    } else {
-                                        data['note'] = "Pulang Lebih Awal"
+                                    if (flagPulangShiftMalam === 0) {
+                                        if (epocEndTime < epocEleTime) {
+                                            data['note'] = "Lembur Pulang"
+                                            break;
+                                        } else {
+                                            data['note'] = "Pulang Lebih Awal"
+                                        }
                                     }
                                 }
                             }

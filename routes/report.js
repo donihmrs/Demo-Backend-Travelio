@@ -13,6 +13,10 @@ router.get('/getPayrollJurnal', function(req, res, next) {
     report.getPayrollForJurnal(req,res,next)
 });
 
+router.get('/getPayrollExportDetail', function(req, res, next) {
+    report.getPayrollExportDetail(req,res,next)
+});
+
 router.post('/getSalaryEmp', function(req, res, next) {
     report.getSalaryEmp(req,res,next)
 });
