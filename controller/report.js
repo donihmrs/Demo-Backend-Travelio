@@ -769,20 +769,8 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         const pembKaryawan_pajak = Math.round(objTotal['details']['bi_pph21'] / 1000) * 1000
         const pembCompany_pajak = Math.round(objTotal['details']['hutang_pph21'] / 1000) * 1000
         const pembGajiNett = objTotal['details']['gajiBruto'] - (pembAsuransiKaryawan_ks + pembAsuransiKaryawan_kt + pembKaryawan_pajak + objTotal['details']['total_pinjaman_karyawan'])
-        const tanpaPembGajiNett = objTotal['details']['gajiBruto'] - (objTotal['details']['bi_bpjs_ks'] + objTotal['details']['bi_bpjs_kt'] + objTotal['details']['bi_pph21'] + objTotal['details']['total_pinjaman_karyawan'])
         
-        objTotal['details']['pembulatan'] = Math.round(pembGajiNett - tanpaPembGajiNett)
-        
-        if (objTotal['details']['pembulatan'] < 0) {
-            objTotal['details']['pembulatan'] = 0
-        }
         objTotal['details']['gajiNett'] = Math.round(pembGajiNett / 1000) * 1000
-        // objTotal['details']['bi_bpjs_ks'] = pembAsuransiKaryawan_ks
-        // objTotal['details']['hutang_bpjs_ks'] = pembAsuransiCompany_ks
-        // objTotal['details']['bi_bpjs_kt'] = pembAsuransiKaryawan_kt
-        // objTotal['details']['hutang_bpjs_kt'] = pembAsuransiCompany_kt
-        // objTotal['details']['bi_pph21'] = pembKaryawan_pajak
-        // objTotal['details']['hutang_pph21'] = pembCompany_pajak
 
         objTotal['details']['bi_bpjs_ks'] = pembAsuransiCompany_ks
         objTotal['details']['hutang_bpjs_ks'] = pembAsuransiCompany_ks + pembAsuransiKaryawan_ks
@@ -790,6 +778,12 @@ report.getPayrollForJurnal =  async (req, res, next) => {
         objTotal['details']['hutang_bpjs_kt'] = pembAsuransiCompany_kt + pembAsuransiKaryawan_kt
         objTotal['details']['bi_pph21'] = pembCompany_pajak
         objTotal['details']['hutang_pph21'] = pembCompany_pajak + pembKaryawan_pajak
+
+        const totalCredit = objTotal['details']['gajiBruto'] + objTotal['details']['bi_bpjs_ks'] + objTotal['details']['bi_bpjs_kt'] + objTotal['details']['bi_pph21']
+
+        const totalDebit = objTotal['details']['hutang_bpjs_ks'] + objTotal['details']['hutang_bpjs_kt'] + objTotal['details']['hutang_pph21'] + objTotal['details']['gajiNett'] + objTotal['details']['total_pinjaman_karyawan']
+        
+        objTotal['details']['pembulatan'] = totalDebit - totalCredit
 
         getData.data = objTotal
 
